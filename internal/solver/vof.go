@@ -211,12 +211,7 @@ func computeFluxX(g *Grid, f *Fields, i, j int, u, dt float64, cfg *Config) floa
 	}
 
 	// Hirt & Nichols CF term
-	var cf float64
-	if cfg.Numerical.OldCFBug {
-		cf = math.Max(0.0, fraction-(1.0-alphaD))
-	} else {
-		cf = math.Max((1.0-alphaAD)*fraction-(1.0-alphaD), 0.0)
-	}
+	cf := math.Max((1.0-alphaAD)*fraction-(1.0-alphaD), 0.0)
 	fluxFrac := math.Min(alphaAD*fraction+cf, alphaD)
 	
 	// Keep the swept-volume cap (flux <= fraction). This is needed to ensure
@@ -257,12 +252,7 @@ func computeFluxY(g *Grid, f *Fields, i, j int, v, dt float64, cfg *Config) floa
 		alphaAD = alphaD
 	}
 
-	var cf float64
-	if cfg.Numerical.OldCFBug {
-		cf = math.Max(0.0, fraction-(1.0-alphaD))
-	} else {
-		cf = math.Max((1.0-alphaAD)*fraction-(1.0-alphaD), 0.0)
-	}
+	cf := math.Max((1.0-alphaAD)*fraction-(1.0-alphaD), 0.0)
 	fluxFrac := math.Min(alphaAD*fraction+cf, alphaD)
 	
 	// Swept-volume cap: ensures flux doesn't exceed total volume crossing the face

@@ -8,6 +8,7 @@ import (
 	"math"
 	"time"
 
+	"dambreak/internal/benchmark"
 	"dambreak/internal/solver"
 )
 
@@ -43,28 +44,7 @@ type RunResult struct {
 	CFLMax float64
 }
 
-func interpTSim(Z_sim, T_sim []float64, Z_target float64) float64 {
-	for i := 0; i < len(Z_sim)-1; i++ {
-		if Z_target >= Z_sim[i] && Z_target <= Z_sim[i+1] {
-			if Z_sim[i+1] == Z_sim[i] {
-				return T_sim[i]
-			}
-			t := (Z_target - Z_sim[i]) / (Z_sim[i+1] - Z_sim[i])
-			return T_sim[i] + t*(T_sim[i+1]-T_sim[i])
-		}
-	}
-	return math.NaN()
-}
-
-func alignTime(Z_sim, T_sim []float64, anchorZ, anchorT float64) []float64 {
-	tAtAnchor := interpTSim(Z_sim, T_sim, anchorZ)
-	shift := anchorT - tAtAnchor
-	alignedT := make([]float64, len(T_sim))
-	for i, t := range T_sim {
-		alignedT[i] = t + shift
-	}
-	return alignedT
-}
+// Removed interpTSim and alignTime
 
 func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale float64, rhoRatio float64) RunResult {
 	start := time.Now()
@@ -185,10 +165,10 @@ func main() {
 	targetZs := []float64{3, 5, 7, 10, 14}
 	for _, r := range runs {
 		fmt.Printf("%s\n", r.Name)
-		alignedT := alignTime(r.Z_sim, r.T_sim, data.TimeNormalisation.AnchorZ, data.TimeNormalisation.AnchorT)
+		alignedT := benchmark.AlignTime(r.Z_sim, r.T_sim, data.TimeNormalisation.AnchorZ, data.TimeNormalisation.AnchorT)
 		for _, z := range targetZs {
-			t_sim := interpTSim(r.Z_sim, r.T_sim, z)
-			t_sim_aligned := interpTSim(r.Z_sim, alignedT, z)
+			t_sim := benchmark.InterpTSim(r.Z_sim, r.T_sim, z)
+			t_sim_aligned := benchmark.InterpTSim(r.Z_sim, alignedT, z)
 			fmt.Printf("  Z=%.1f: T_sim_raw=%.3f T_sim_aligned=%.3f\n", z, t_sim, t_sim_aligned)
 		}
 	}
@@ -208,11 +188,11 @@ func main() {
 	fmt.Println("\n--- Full Benchcompare ---")
 	for _, r := range runs {
 		fmt.Printf("%s\n", r.Name)
-		alignedT := alignTime(r.Z_sim, r.T_sim, data.TimeNormalisation.AnchorZ, data.TimeNormalisation.AnchorT)
+		alignedT := benchmark.AlignTime(r.Z_sim, r.T_sim, data.TimeNormalisation.AnchorZ, data.TimeNormalisation.AnchorT)
 		for i, z := range Z_exp {
 			if z < 1.44 || z > r.Z_sim[len(r.Z_sim)-1] { continue }
-			t_sim := interpTSim(r.Z_sim, r.T_sim, z)
-			t_sim_aligned := interpTSim(r.Z_sim, alignedT, z)
+			t_sim := benchmark.InterpTSim(r.Z_sim, r.T_sim, z)
+			t_sim_aligned := benchmark.InterpTSim(r.Z_sim, alignedT, z)
 			fmt.Printf("  Z=%.2f: T_exp=%.2f T_raw=%.2f T_aligned=%.2f dT/T_raw=%.1f%%\n", 
 				z, T_exp[i], t_sim, t_sim_aligned, 100*(t_sim-T_exp[i])/T_exp[i])
 		}
@@ -228,11 +208,11 @@ func main() {
 	targetZsAttr := []float64{3, 5, 7, 10}
 	for _, r := range attrRuns {
 		fmt.Printf("%s\n", r.Name)
-		alignedT := alignTime(r.Z_sim, r.T_sim, data.TimeNormalisation.AnchorZ, data.TimeNormalisation.AnchorT)
+		alignedT := benchmark.AlignTime(r.Z_sim, r.T_sim, data.TimeNormalisation.AnchorZ, data.TimeNormalisation.AnchorT)
 		for _, z := range targetZsAttr {
-			t_sim := interpTSim(r.Z_sim, r.T_sim, z)
-			t_sim_aligned := interpTSim(r.Z_sim, alignedT, z)
-			t_sim_01 := interpTSim(r.Z_01, r.T_sim, z)
+			t_sim := benchmark.InterpTSim(r.Z_sim, r.T_sim, z)
+			t_sim_aligned := benchmark.InterpTSim(r.Z_sim, alignedT, z)
+			t_sim_01 := benchmark.InterpTSim(r.Z_01, r.T_sim, z)
 			fmt.Printf("  Z=%.1f: T_raw=%.3f T_aligned=%.3f T_raw(0.1)=%.3f\n", z, t_sim, t_sim_aligned, t_sim_01)
 		}
 	}

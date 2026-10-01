@@ -81,7 +81,6 @@ type Config struct {
 		SkipAdvection    bool
 		SkipViscosity    bool
 		ClipRedistribute bool
-		OldCFBug         bool
 	}
 	TimeScale TimeScaleConvention
 	XStarDef  XStarConvention
