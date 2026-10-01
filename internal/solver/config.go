@@ -152,9 +152,12 @@ type SimState struct {
 	CFL        float64
 	Volume     float64
 	VolumeDrift float64
-	FrontX     float64
-	FrontXStar float64
-	TStar      float64
+	FrontX      float64
+	FrontXStar  float64
+	FrontXStar01 float64
+	FrontXStar001 float64
+	ResidualHStar float64
+	TStar       float64
 	PoissonIter int
 	PoissonResidual float64
 	MaxDiv     float64

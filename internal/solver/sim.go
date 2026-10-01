@@ -105,6 +105,8 @@ func (s *Simulation) UpdateDiagnostics() {
 	f := s.Fields
 	vol := 0.0
 	frontX := 0.0
+	frontX01 := 0.0
+	frontX001 := 0.0
 
 	for j := 1; j <= g.Ny; j++ {
 		for i := 1; i <= g.Nx; i++ {
@@ -113,28 +115,57 @@ func (s *Simulation) UpdateDiagnostics() {
 		}
 	}
 	
-	// Front position: sub-cell linear interpolation of the alpha = 0.5 crossing in the lowest row (j=1)
-	for i := g.Nx; i >= 1; i-- {
-		idx := g.idxCC(i, 1)
+	findCrossing := func(threshold float64) float64 {
+		for i := g.Nx; i >= 1; i-- {
+			idx := g.idxCC(i, 1)
+			a := f.Alpha[idx]
+			if a > threshold {
+				if i < g.Nx {
+					aNext := f.Alpha[g.idxCC(i+1, 1)]
+					if aNext <= threshold {
+						t := (threshold - a) / (aNext - a)
+						return g.Xc[idx] + t*g.Dx
+					} else {
+						return g.Xc[idx] + 0.5*g.Dx
+					}
+				} else {
+					return g.Xc[idx] + 0.5*g.Dx
+				}
+			}
+		}
+		return g.Xc[g.idxCC(1, 1)] - 0.5*g.Dx
+	}
+
+	frontX = findCrossing(0.5)
+	frontX01 = findCrossing(0.1)
+	frontX001 = findCrossing(0.01)
+
+	// Residual-height diagnostic: H = (alpha = 0.5 surface height in the column next to the left wall, sub-cell interpolated) / H0
+	// i=1 is the column next to the left wall
+	residualH := 0.0
+	for j := g.Ny; j >= 1; j-- {
+		idx := g.idxCC(1, j)
 		a := f.Alpha[idx]
 		if a > 0.5 {
-			if i < g.Nx {
-				aNext := f.Alpha[g.idxCC(i+1, 1)]
+			if j < g.Ny {
+				aNext := f.Alpha[g.idxCC(1, j+1)]
 				if aNext <= 0.5 {
-					// Interpolate between cell centers Xc[i] and Xc[i+1]
 					t := (0.5 - a) / (aNext - a)
-					frontX = g.Xc[idx] + t*g.Dx
+					residualH = g.Yc[idx] + t*g.Dy
 				} else {
-					frontX = g.Xc[idx] + 0.5*g.Dx
+					residualH = g.Yc[idx] + 0.5*g.Dy
 				}
 			} else {
-				frontX = g.Xc[idx] + 0.5*g.Dx
+				residualH = g.Yc[idx] + 0.5*g.Dy
 			}
 			break
 		}
 	}
-	vol *= g.Dx * g.Dy
+	if residualH == 0.0 {
+		residualH = g.Yc[g.idxCC(1, 1)] - 0.5*g.Dy
+	}
 
+	vol *= g.Dx * g.Dy
 	if s.State.Volume == 0 {
 		s.State.Volume = vol // initial volume
 	}
@@ -146,6 +177,9 @@ func (s *Simulation) UpdateDiagnostics() {
 	gConst := s.Cfg.Physical.Gravity
 	
 	s.State.FrontXStar = frontX / L0
+	s.State.FrontXStar01 = frontX01 / L0
+	s.State.FrontXStar001 = frontX001 / L0
+	s.State.ResidualHStar = residualH / s.Cfg.Domain.H0
 
 	// Invariant check: X* should never be less than 1.0 (the column's initial right edge)
 	// Allow a tiny tolerance for numerical smearing/rounding at t=0.
