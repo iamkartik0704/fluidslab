@@ -134,6 +134,8 @@ func runDambreakCLI(nx, ny int, tMax float64, outHz int, freeSlip bool, prefix s
 
 	fmt.Printf("dambreak: %dx%d, L0=%.3f, H0=%.3f, Tmax=%.2f\n",
 		nx, ny, cfg.Domain.L0, cfg.Domain.H0, tMax)
+	fmt.Println("t* Convention: t* = t * sqrt(2g / L0)")
+	fmt.Println("X* Convention: X* = x / L0")
 
 	csvFile, err := os.Create(fmt.Sprintf("out/dambreak_%s.csv", prefix))
 	if err != nil {

@@ -110,7 +110,7 @@ func TestVOFRigidBodyRotation(t *testing.T) {
 			t.Logf("  Smeared Cells: %d", smearedCells)
 			t.Logf("  Interface Width (cells): %.2f", interfaceWidth)
 			
-			if tt.scheme == AdvectDonorAcceptor && smearedCells > 450 {
+			if tt.scheme == AdvectDonorAcceptor && smearedCells > 350 {
 				t.Errorf("Interface smeared too much: %d", smearedCells)
 			}
 		})

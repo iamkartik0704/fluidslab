@@ -28,6 +28,12 @@ const (
 	TimeScaleSqrtgOverL0
 )
 
+type XStarConvention int
+
+const (
+	XStarFrontXOverL0 XStarConvention = iota
+)
+
 type Config struct {
 	Domain struct {
 		L0          float64
@@ -79,6 +85,7 @@ type Config struct {
 		DensityBug       bool
 	}
 	TimeScale TimeScaleConvention
+	XStarDef  XStarConvention
 	// CSF surface tension: coefficient kept in Physical.Sigma but the model is
 	// DISABLED (SigmaActive = 0) until everything else passes validation.
 	SigmaActive float64

@@ -44,8 +44,10 @@ func cavityCfg() Config {
 }
 
 // runCavity integrates the cavity to tMax on an n x n grid.
-func runCavity(n int, tMax float64, t *testing.T) (*Grid, *Fields, SimState) {
-	s := NewSimulation(cavityCfg(), n, n, 1.0, 1.0, true)
+func runCavity(n int, tMax float64, t *testing.T, secondOrder bool) (*Grid, *Fields, SimState) {
+	cfg := cavityCfg()
+	cfg.Numerical.SecondOrderAdvect = secondOrder
+	s := NewSimulation(cfg, n, n, 1.0, 1.0, true)
 	for s.State.Time < tMax {
 		if err := s.Step(-1); err != nil {
 			t.Fatalf("cavity n=%d: %v", n, err)
@@ -102,9 +104,9 @@ func ghiaComparisonError(g *Grid, f *Fields, t *testing.T) float64 {
 
 // TestCavityRe100Ghia: steady state at Re=100, 33^2 grid, compared to Ghia.
 // First-order upwind + these resolutions -> 0.06 tolerance is realistic.
-func TestCavityRe100Ghia(t *testing.T) {
-	g, f, st := runCavity(33, 30.0, t)
-	t.Logf("cavity 33^2: t=%.2f steps=%d maxDiv=%.2e lastPoissIter=%d",
+func TestCavityRe100GhiaFirstOrder(t *testing.T) {
+	g, f, st := runCavity(33, 30.0, t, false)
+	t.Logf("cavity 33^2 (first-order): t=%.2f steps=%d maxDiv=%.2e lastPoissIter=%d",
 		st.Time, st.Step, st.MaxDiv, st.PoissonIter)
 	if st.MaxDiv > 1e-6 {
 		t.Errorf("steady max|div| = %.3e > 1e-6", st.MaxDiv)
@@ -114,16 +116,30 @@ func TestCavityRe100Ghia(t *testing.T) {
 	// First-order upwind momentum advection on a 33^2 grid leaves an O(0.1)
 	// profile error; the 17^2<->33^2 convergence test confirms the error is
 	// discretisation-dominated (it shrinks with resolution).
-	if maxErr > 0.096 {
-		t.Errorf("Ghia comparison error %.4f > 0.096", maxErr)
+	if maxErr > 0.055 {
+		t.Errorf("Ghia comparison error %.4f > 0.055", maxErr)
+	}
+}
+
+func TestCavityRe100GhiaVanLeer(t *testing.T) {
+	g, f, st := runCavity(33, 30.0, t, true)
+	t.Logf("cavity 33^2 (van Leer): t=%.2f steps=%d maxDiv=%.2e lastPoissIter=%d",
+		st.Time, st.Step, st.MaxDiv, st.PoissonIter)
+	if st.MaxDiv > 1e-6 {
+		t.Errorf("steady max|div| = %.3e > 1e-6", st.MaxDiv)
+	}
+	maxErr := ghiaComparisonError(g, f, t)
+	t.Logf("cavity 33^2: max|u - Ghia| = %.4f", maxErr)
+	if maxErr > 0.04 {
+		t.Errorf("Ghia comparison error %.4f > 0.040", maxErr)
 	}
 }
 
 // TestCavityGridConvergence: the 17^2 and 33^2 steady profiles must agree to
 // within the expected first-order discretisation difference.
-func TestCavityGridConvergence(t *testing.T) {
-	g17, f17, st17 := runCavity(17, 30.0, t)
-	g33, f33, st33 := runCavity(33, 30.0, t)
+func TestCavityGridConvergenceFirstOrder(t *testing.T) {
+	g17, f17, st17 := runCavity(17, 30.0, t, false)
+	g33, f33, st33 := runCavity(33, 30.0, t, false)
 	s17 := sampleCenterlineU(g17, f17)
 	s33 := sampleCenterlineU(g33, f33)
 	diff := 0.0
@@ -135,8 +151,26 @@ func TestCavityGridConvergence(t *testing.T) {
 	}
 	t.Logf("grid convergence: max|u17-u33| = %.4f (steps 17^2=%d 33^2=%d, maxDiv %.1e / %.1e)",
 		diff, st17.Step, st33.Step, st17.MaxDiv, st33.MaxDiv)
-	if diff > 0.12 {
-		t.Errorf("two-resolution difference %.4f > 0.12", diff)
+	if diff > 0.035 {
+		t.Errorf("two-resolution difference %.4f > 0.035", diff)
+	}
+}
+
+func TestCavityGridConvergenceVanLeer(t *testing.T) {
+	g17, f17, _ := runCavity(17, 30.0, t, true)
+	g33, f33, _ := runCavity(33, 30.0, t, true)
+	s17 := sampleCenterlineU(g17, f17)
+	s33 := sampleCenterlineU(g33, f33)
+	diff := 0.0
+	for k := 1; k < 32; k++ {
+		yn := float64(k) / 32.0
+		if d := math.Abs(s17(yn) - s33(yn)); d > diff {
+			diff = d
+		}
+	}
+	t.Logf("grid convergence: max|u17-u33| = %.4f", diff)
+	if diff > 0.04 {
+		t.Errorf("two-resolution difference %.4f > 0.04", diff)
 	}
 }
 
@@ -147,7 +181,7 @@ func TestCavityFine65(t *testing.T) {
 	if os.Getenv("DAMBREAK_LONG") != "1" {
 		t.Skip("set DAMBREAK_LONG=1 to run the 65^2 reference (>10 min)")
 	}
-	g, f, st := runCavity(65, 30.0, t)
+	g, f, st := runCavity(65, 30.0, t, false)
 	maxErr := ghiaComparisonError(g, f, t)
 	t.Logf("cavity 65^2: t=%.2f steps=%d maxDiv=%.2e max|u-Ghia|=%.4f",
 		st.Time, st.Step, st.MaxDiv, maxErr)

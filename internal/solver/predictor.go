@@ -88,6 +88,8 @@ func predict(g *Grid, f *Fields, cfg *Config, dt float64, muU, muV []float64) {
 				if so && i >= 2 {
 					uWW := f.U[g.idxU(i-2, j)]
 					dudx = tvdGrad(uWW, uW, uC, uE, g.Dx, true)
+				} else if so {
+					dudx = 0.5 * (uE - uW) * invDx
 				} else {
 					dudx = (uC - uW) * invDx
 				}
@@ -96,6 +98,8 @@ func predict(g *Grid, f *Fields, cfg *Config, dt float64, muU, muV []float64) {
 					uEE := f.U[g.idxU(i+2, j)]
 					dudx = tvdGrad(uEE, uE, uC, uW, g.Dx, true)
 					dudx = -dudx // flip sign: downwind is to the left
+				} else if so {
+					dudx = 0.5 * (uE - uW) * invDx
 				} else {
 					dudx = (uE - uC) * invDx
 				}
@@ -114,6 +118,8 @@ func predict(g *Grid, f *Fields, cfg *Config, dt float64, muU, muV []float64) {
 				if so && j >= 2 {
 					uSS := f.U[g.idxU(i, j-2)]
 					dudy = tvdGrad(uSS, uS, uC, uN, g.Dy, true)
+				} else if so {
+					dudy = 0.5 * (uN - uS) * invDy
 				} else {
 					dudy = (uC - uS) * invDy
 				}
@@ -122,6 +128,8 @@ func predict(g *Grid, f *Fields, cfg *Config, dt float64, muU, muV []float64) {
 					uNN := f.U[g.idxU(i, j+2)]
 					dudy = tvdGrad(uNN, uN, uC, uS, g.Dy, true)
 					dudy = -dudy
+				} else if so {
+					dudy = 0.5 * (uN - uS) * invDy
 				} else {
 					dudy = (uN - uC) * invDy
 				}
@@ -173,6 +181,8 @@ func predict(g *Grid, f *Fields, cfg *Config, dt float64, muU, muV []float64) {
 				if so && j >= 2 {
 					vSS := f.V[g.idxV(i, j-2)]
 					dvdy = tvdGrad(vSS, vS, vC, vN, g.Dy, true)
+				} else if so {
+					dvdy = 0.5 * (vN - vS) * invDy
 				} else {
 					dvdy = (vC - vS) * invDy
 				}
@@ -181,6 +191,8 @@ func predict(g *Grid, f *Fields, cfg *Config, dt float64, muU, muV []float64) {
 					vNN := f.V[g.idxV(i, j+2)]
 					dvdy = tvdGrad(vNN, vN, vC, vS, g.Dy, true)
 					dvdy = -dvdy
+				} else if so {
+					dvdy = 0.5 * (vN - vS) * invDy
 				} else {
 					dvdy = (vN - vC) * invDy
 				}
@@ -192,6 +204,8 @@ func predict(g *Grid, f *Fields, cfg *Config, dt float64, muU, muV []float64) {
 					vW := f.V[g.idxV(i-1, j)]
 					vE := f.V[g.idxV(i+1, j)]
 					dvdx = tvdGrad(vWW, vW, vC, vE, g.Dx, true)
+				} else if so {
+					dvdx = 0.5 * (f.V[g.idxV(i+1, j)] - f.V[g.idxV(i-1, j)]) * invDx
 				} else {
 					dvdx = (vC - f.V[g.idxV(i-1, j)]) * invDx
 				}
@@ -202,6 +216,8 @@ func predict(g *Grid, f *Fields, cfg *Config, dt float64, muU, muV []float64) {
 					vW := f.V[g.idxV(i-1, j)]
 					dvdx = tvdGrad(vEE, vE, vC, vW, g.Dx, true)
 					dvdx = -dvdx
+				} else if so {
+					dvdx = 0.5 * (f.V[g.idxV(i+1, j)] - f.V[g.idxV(i-1, j)]) * invDx
 				} else {
 					dvdx = (f.V[g.idxV(i+1, j)] - vC) * invDx
 				}

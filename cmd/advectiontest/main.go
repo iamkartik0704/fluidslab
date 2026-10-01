@@ -6,8 +6,8 @@ import (
 	"math"
 )
 
-func runDecayingVortex(N int, secondOrder bool) float64 {
-	L := math.Pi
+func runDecayingVortex(N int, secondOrder bool) (float64, float64) {
+	L := 2.0 * math.Pi
 	cfg := solver.DefaultConfig()
 	cfg.Domain.L0 = L
 	cfg.Domain.H0 = L
@@ -17,9 +17,9 @@ func runDecayingVortex(N int, secondOrder bool) float64 {
 	cfg.Domain.Height = L
 	cfg.Numerical.FreeSlip = true
 	
-	cfg.Numerical.PoissonTol = 1e-9 // tight tolerance for accurate pressure
-	cfg.Numerical.MaxDT = 0.001      // limit dt for temporal accuracy
-	cfg.Numerical.CFL = 0.01
+	cfg.Numerical.PoissonTol = 1e-6
+	cfg.Numerical.MaxDT = 100.0 // let CFL govern
+	cfg.Numerical.CFL = 0.5
 	cfg.Numerical.SecondOrderAdvect = secondOrder
 	cfg.Physical.Gravity = 0.0
 	cfg.Physical.RhoW = 1.0
@@ -32,50 +32,53 @@ func runDecayingVortex(N int, secondOrder bool) float64 {
 	
 	nu := cfg.Physical.MuW / cfg.Physical.RhoW
 
-	// Init exact solution
-	for j := N/2; j <= N/2; j++ {
-		for i := 1; i <= N+1; i++ {
+	for j := 0; j <= N+1; j++ {
+		for i := 0; i <= N+1; i++ {
 			x := float64(i-1)*sim.Grid.Dx
 			y := (float64(j)-0.5)*sim.Grid.Dy
-			sim.Fields.U[sim.Grid.IdxU(i, j)] = -math.Sin(x) * math.Cos(y)
+			sim.Fields.U[sim.Grid.IdxU(i, j)] = math.Sin(x) * math.Cos(y)
 		}
 	}
-	for j := N/2; j <= N/2+1; j++ {
-		for i := 1; i <= N; i++ {
+	for j := 0; j <= N+1; j++ {
+		for i := 0; i <= N+1; i++ {
 			x := (float64(i)-0.5)*sim.Grid.Dx
 			y := float64(j-1)*sim.Grid.Dy
-			sim.Fields.V[sim.Grid.IdxV(i, j)] = math.Cos(x) * math.Sin(y)
+			sim.Fields.V[sim.Grid.IdxV(i, j)] = -math.Cos(x) * math.Sin(y)
 		}
 	}
 	for i := range sim.Fields.Alpha {
-		sim.Fields.Alpha[i] = 1.0 // single phase
+		sim.Fields.Alpha[i] = 1.0
 	}
 
-	for sim.State.Time < 0.1 {
+	for sim.State.Time < 1.0 {
 		err := sim.Step(-1)
 		if err != nil {
 			panic(err)
 		}
 	}
 
-	// Compare with analytical solution at t = sim.State.Time
 	maxErr := 0.0
-	for j := N/2; j <= N/2; j++ {
-		for i := N/2; i <= N/2; i++ { // interior U
-			x := float64(i-1)*sim.Grid.Dx
+	meanErr := 0.0
+	count := 0
+	
+	for j := 1; j <= N; j++ {
+		for i := 1; i <= N-1; i++ { // interior U
+			x := float64(i)*sim.Grid.Dx
 			y := (float64(j)-0.5)*sim.Grid.Dy
-			exact := -math.Sin(x) * math.Cos(y) * math.Exp(-2.0*nu*sim.State.Time)
-			err := math.Abs(sim.Fields.U[sim.Grid.IdxU(i, j)] - exact)
+			exact := math.Sin(x) * math.Cos(y) * math.Exp(-2.0*nu*sim.State.Time)
+			err := math.Abs(sim.Fields.U[sim.Grid.IdxU(i+1, j)] - exact) // Wait, idxU(i, j) for i=1..N+1. U(i) is at x = (i-1)*dx. So interior is i=2..N. Let me just use i=1..N-1 and index is i+1. Then x = i*dx.
 			if err > maxErr {
 				maxErr = err
 			}
+			meanErr += err
+			count++
 		}
 	}
-	return maxErr
+	return meanErr / float64(count), maxErr
 }
 
 func main() {
-	fmt.Println("=== TASK 4: Advection Accuracy (Decaying Vortex) ===")
+	fmt.Println("=== TASK 4: Advection Accuracy (Taylor-Green Vortex t=1.0) ===")
 	
 	sizes := []int{16, 32, 64}
 	
@@ -88,14 +91,14 @@ func main() {
 		
 		prevErr := 0.0
 		for _, n := range sizes {
-			err := runDecayingVortex(n, so)
+			meanErr, maxErr := runDecayingVortex(n, so)
 			if prevErr > 0 {
-				order := math.Log2(prevErr / err)
-				fmt.Printf("N = %2d | Max U Error = %.5e | Order = %.2f\n", n, err, order)
+				order := math.Log2(prevErr / meanErr)
+				fmt.Printf("N = %2d | Mean U Error = %.4f | Max U Error = %.4f | Order = %.2f\n", n, meanErr, maxErr, order)
 			} else {
-				fmt.Printf("N = %2d | Max U Error = %.5e | Order = N/A\n", n, err)
+				fmt.Printf("N = %2d | Mean U Error = %.4f | Max U Error = %.4f | Order = N/A\n", n, meanErr, maxErr)
 			}
-			prevErr = err
+			prevErr = meanErr
 		}
 		fmt.Println()
 	}
