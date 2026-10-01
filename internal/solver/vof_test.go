@@ -186,8 +186,19 @@ func TestHirtNicholsCF(t *testing.T) {
 	f.Alpha[g.IdxCC(2, 1)] = 0.8
 	f.Alpha[g.IdxCC(3, 1)] = 0.2
 	f.Alpha[g.IdxCC(4, 1)] = 0.0
+
+	// Fixed case
 	flux := computeFluxX(g, f, 2, 1, 0.5, 1.0, &cfg)
 	if math.Abs(flux-0.3) > 1e-6 {
 		t.Errorf("Hirt Nichols CF broken: expected flux 0.3, got %f", flux)
 	}
+
+	// Legacy bug case
+	cfgBug := cfg
+	cfgBug.Numerical.OldCFBug = true
+	fluxBug := computeFluxX(g, f, 2, 1, 0.5, 1.0, &cfgBug)
+	if math.Abs(fluxBug-0.3) < 1e-6 {
+		t.Errorf("OldCFBug should yield the incorrect legacy flux, but it gave the correct flux.")
+	}
 }
+
