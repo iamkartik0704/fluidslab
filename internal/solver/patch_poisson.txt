@@ -1,0 +1,23 @@
+func runParallel(ny int, threads int, worker func(jStart, jEnd int)) {
+	if threads <= 1 {
+		worker(1, ny)
+		return
+	}
+	var wg sync.WaitGroup
+	chunk := (ny + threads - 1) / threads
+	for t := 0; t < threads; t++ {
+		jStart := 1 + t*chunk
+		jEnd := jStart + chunk - 1
+		if jEnd > ny {
+			jEnd = ny
+		}
+		if jStart <= jEnd {
+			wg.Add(1)
+			go func(start, end int) {
+				worker(start, end)
+				wg.Done()
+			}(jStart, jEnd)
+		}
+	}
+	wg.Wait()
+}
