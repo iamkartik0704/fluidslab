@@ -28,7 +28,12 @@ func InterpolateRhoToFaces(g *Grid, f *Fields, cfg *Config) {
 	for j := 1; j <= g.Ny; j++ {
 		for i := 1; i <= g.Nx; i++ {
 			idxL := g.idxCC(i, j)
-			idxR := g.idxCC(i+1, j)
+			var idxR int
+			if cfg.Numerical.DensityBug {
+				idxR = g.idxCC(i, j)
+			} else {
+				idxR = g.idxCC(i+1, j)
+			}
 			idxU := g.idxU(i, j)
 
 			rhoL := f.Rho[idxL]
@@ -51,7 +56,12 @@ func InterpolateRhoToFaces(g *Grid, f *Fields, cfg *Config) {
 	for j := 1; j <= g.Ny; j++ {
 		for i := 1; i <= g.Nx; i++ {
 			idxB := g.idxCC(i, j)
-			idxT := g.idxCC(i, j+1)
+			var idxT int
+			if cfg.Numerical.DensityBug {
+				idxT = g.idxCC(i, j)
+			} else {
+				idxT = g.idxCC(i, j+1)
+			}
 			idxV := g.idxV(i, j)
 
 			rhoB := f.Rho[idxB]

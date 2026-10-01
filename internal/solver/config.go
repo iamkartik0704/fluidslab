@@ -75,6 +75,8 @@ type Config struct {
 		SkipAdvection    bool
 		SkipViscosity    bool
 		ClipRedistribute bool
+		OldCFBug         bool
+		DensityBug       bool
 	}
 	TimeScale TimeScaleConvention
 	// CSF surface tension: coefficient kept in Physical.Sigma but the model is
