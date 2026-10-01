@@ -6,6 +6,9 @@ import (
 	"io/ioutil"
 	"log"
 	"math"
+	"os"
+	"os/exec"
+	"strings"
 	"time"
 
 	"dambreak/internal/benchmark"
@@ -27,6 +30,12 @@ type BenchmarkData struct {
 	} `json:"scales"`
 }
 
+type WindowStat struct {
+	SumIter   int
+	CountIter int
+	MaxIter   int
+}
+
 type RunResult struct {
 	Name string
 	WallTime time.Duration
@@ -34,8 +43,11 @@ type RunResult struct {
 	MaxVolDrift float64
 	Warnings int
 	MaxDiv float64
+	FinalDiv float64
 	MeanPoissonIter float64
 	MaxPoissonIter int
+	
+	Windows [4]WindowStat // 0-2, 2-4, 4-8, 8-12
 	
 	Z_sim []float64
 	T_sim []float64
@@ -44,9 +56,21 @@ type RunResult struct {
 	CFLMax float64
 }
 
-// Removed interpTSim and alignTime
+func getGitInfo() (string, bool) {
+	out, err := exec.Command("git", "rev-parse", "HEAD").Output()
+	hash := "unknown"
+	if err == nil {
+		hash = strings.TrimSpace(string(out))
+	}
+	out, err = exec.Command("git", "status", "--porcelain").Output()
+	dirty := true
+	if err == nil && len(strings.TrimSpace(string(out))) == 0 {
+		dirty = false
+	}
+	return hash, dirty
+}
 
-func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale float64, rhoRatio float64) RunResult {
+func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale float64, rhoRatio float64, gitHash string, gitDirty bool) RunResult {
 	start := time.Now()
 	
 	L0 := 0.05715
@@ -87,9 +111,26 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 		Name: name,
 	}
 	
+	initialVol := sim.State.Volume
 	maxVolDrift := 0.0
 	sumIter := 0
 	countIter := 0
+
+	os.MkdirAll("out/finalpass", 0755)
+	fCsv, err := os.Create(fmt.Sprintf("out/finalpass/%s.csv", name))
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer fCsv.Close()
+
+	advStr := "FirstOrder"
+	if vanLeer { advStr = "VanLeer" }
+	wallStr := "NoSlip"
+	if freeSlip { wallStr = "FreeSlip" }
+
+	fmt.Fprintf(fCsv, "# commit=%s dirty=%v domain=15L0x4L0 cellsPerL0=%d advection=%s wall=%s density_ratio=%.1f t*=t_sqrt(2g/L0)\n",
+		gitHash, gitDirty, cellsPerL0, advStr, wallStr, rhoRatio)
+	fmt.Fprintf(fCsv, "t_star,X_star_05,X_star_01,X_star_001\n")
 
 	for {
 		sim.Step(0)
@@ -101,19 +142,34 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 			res.T_sim = append(res.T_sim, t_star)
 			res.Z_01 = append(res.Z_01, sim.State.FrontXStar01)
 			res.Z_001 = append(res.Z_001, sim.State.FrontXStar001)
+			fmt.Fprintf(fCsv, "%.5f,%.5f,%.5f,%.5f\n", t_star, sim.State.FrontXStar, sim.State.FrontXStar01, sim.State.FrontXStar001)
 		}
 
-		if math.Abs(sim.State.VolumeDrift) > maxVolDrift {
-			maxVolDrift = math.Abs(sim.State.VolumeDrift)
+		driftFrac := math.Abs(sim.State.VolumeDrift) / initialVol
+		if driftFrac > maxVolDrift {
+			maxVolDrift = driftFrac
 		}
 		if sim.State.MaxDiv > res.MaxDiv { res.MaxDiv = sim.State.MaxDiv }
+		res.FinalDiv = sim.State.MaxDiv // updates every step
 		
-		sumIter += sim.State.PoissonIter
+		pIter := sim.State.PoissonIter
+		sumIter += pIter
 		countIter++
-		if sim.State.PoissonIter > res.MaxPoissonIter {
-			res.MaxPoissonIter = sim.State.PoissonIter
+		if pIter > res.MaxPoissonIter {
+			res.MaxPoissonIter = pIter
 		}
 		
+		// Window stats: 0-2, 2-4, 4-8, 8-12
+		wIdx := -1
+		if t_star <= 2.0 { wIdx = 0 } else if t_star <= 4.0 { wIdx = 1 } else if t_star <= 8.0 { wIdx = 2 } else if t_star <= 12.0 { wIdx = 3 }
+		if wIdx >= 0 {
+			res.Windows[wIdx].SumIter += pIter
+			res.Windows[wIdx].CountIter++
+			if pIter > res.Windows[wIdx].MaxIter {
+				res.Windows[wIdx].MaxIter = pIter
+			}
+		}
+
 		if sim.State.CFL > res.CFLMax {
 			res.CFLMax = sim.State.CFL
 		}
@@ -144,21 +200,24 @@ func main() {
 	Z_exp := data.Scales.A2p25In.Mean.Z
 	T_exp := data.Scales.A2p25In.Mean.T
 
+	gitHash, gitDirty := getGitInfo()
+	fmt.Printf("Git State: commit=%s dirty=%v\n\n", gitHash, gitDirty)
+
 	// 1. Matrix cases
 	runs := []RunResult{
-		runSimAttr("N32_FSfalse_VLfalse", 32, false, false, 1.0, 1000.0),
-		runSimAttr("N32_FSfalse_VLtrue", 32, false, true, 1.0, 1000.0),
-		runSimAttr("N32_FStrue_VLfalse", 32, true, false, 1.0, 1000.0),
-		runSimAttr("N32_FStrue_VLtrue", 32, true, true, 1.0, 1000.0),
+		runSimAttr("N32_FSfalse_VLfalse", 32, false, false, 1.0, 1000.0, gitHash, gitDirty),
+		runSimAttr("N32_FSfalse_VLtrue", 32, false, true, 1.0, 1000.0, gitHash, gitDirty),
+		runSimAttr("N32_FStrue_VLfalse", 32, true, false, 1.0, 1000.0, gitHash, gitDirty),
+		runSimAttr("N32_FStrue_VLtrue", 32, true, true, 1.0, 1000.0, gitHash, gitDirty),
 		// 4. Convergence series (need N=8, N=16 as well)
-		runSimAttr("N8_FStrue_VLfalse", 8, true, false, 1.0, 1000.0),
-		runSimAttr("N16_FStrue_VLfalse", 16, true, false, 1.0, 1000.0),
-		runSimAttr("N8_FStrue_VLtrue", 8, true, true, 1.0, 1000.0),
-		runSimAttr("N16_FStrue_VLtrue", 16, true, true, 1.0, 1000.0),
+		runSimAttr("N8_FStrue_VLfalse", 8, true, false, 1.0, 1000.0, gitHash, gitDirty),
+		runSimAttr("N16_FStrue_VLfalse", 16, true, false, 1.0, 1000.0, gitHash, gitDirty),
+		runSimAttr("N8_FStrue_VLtrue", 8, true, true, 1.0, 1000.0, gitHash, gitDirty),
+		runSimAttr("N16_FStrue_VLtrue", 16, true, true, 1.0, 1000.0, gitHash, gitDirty),
 		// 5. Time-step series (dt=1/2, 1/4, 1/8) for 16, FS, VL
-		runSimAttr("N16_FStrue_VLtrue_dt2", 16, true, true, 0.5, 1000.0),
-		runSimAttr("N16_FStrue_VLtrue_dt4", 16, true, true, 0.25, 1000.0),
-		runSimAttr("N16_FStrue_VLtrue_dt8", 16, true, true, 0.125, 1000.0),
+		runSimAttr("N16_FStrue_VLtrue_dt2", 16, true, true, 0.5, 1000.0, gitHash, gitDirty),
+		runSimAttr("N16_FStrue_VLtrue_dt4", 16, true, true, 0.25, 1000.0, gitHash, gitDirty),
+		runSimAttr("N16_FStrue_VLtrue_dt8", 16, true, true, 0.125, 1000.0, gitHash, gitDirty),
 	}
 	
 	fmt.Println("\n--- Convergence Series (T_sim at Z=3,5,7,10,14) ---")
@@ -180,8 +239,17 @@ func main() {
 	
 	fmt.Println("\n--- Matrix Stats ---")
 	for _, r := range runs {
-		fmt.Printf("%s: WallTime=%v Steps=%d MaxDiv=%.2e MeanIter=%.1f MaxVolDrift=%.2e\n", 
-			r.Name, r.WallTime, r.Steps, r.MaxDiv, r.MeanPoissonIter, r.MaxVolDrift)
+		fmt.Printf("%s: WallTime=%v Steps=%d MaxDiv=%.2e FinalDiv=%.2e MaxVolDriftFrac=%.2e\n", 
+			r.Name, r.WallTime, r.Steps, r.MaxDiv, r.FinalDiv, r.MaxVolDrift)
+		fmt.Printf("  Poisson Windows (Mean / Max):\n")
+		wNames := []string{"0-2", "2-4", "4-8", "8-12"}
+		for i, w := range r.Windows {
+			mean := 0.0
+			if w.CountIter > 0 {
+				mean = float64(w.SumIter) / float64(w.CountIter)
+			}
+			fmt.Printf("    t* %s: Mean=%.1f Max=%d\n", wNames[i], mean, w.MaxIter)
+		}
 	}
 
 	// Full benchcompare for N16 and N32 cases
@@ -199,8 +267,8 @@ func main() {
 	}
 	
 	// Attribution requires density ratio 100 runs
-	r_dens_FO := runSimAttr("N16_FStrue_VLfalse_rho100", 16, true, false, 1.0, 100.0)
-	r_dens_VL := runSimAttr("N16_FStrue_VLtrue_rho100", 16, true, true, 1.0, 100.0)
+	r_dens_FO := runSimAttr("N16_FStrue_VLfalse_rho100", 16, true, false, 1.0, 100.0, gitHash, gitDirty)
+	r_dens_VL := runSimAttr("N16_FStrue_VLtrue_rho100", 16, true, true, 1.0, 100.0, gitHash, gitDirty)
 	
 	attrRuns := append(runs, r_dens_FO, r_dens_VL)
 	

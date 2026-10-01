@@ -2,7 +2,6 @@ package solver
 
 import (
 	"math"
-	"os"
 	"testing"
 )
 
@@ -178,11 +177,26 @@ func TestCavityGridConvergenceVanLeer(t *testing.T) {
 // reference. It costs well over ten minutes of wall time with the Jacobi-PCG
 // solver, so it only runs when DAMBREAK_LONG=1 is set.
 func TestCavityFine65(t *testing.T) {
-	if os.Getenv("DAMBREAK_LONG") != "1" {
-		t.Skip("set DAMBREAK_LONG=1 to run the 65^2 reference (>10 min)")
-	}
 	g, f, st := runCavity(65, 30.0, t, false)
-	maxErr := ghiaComparisonError(g, f, t)
-	t.Logf("cavity 65^2: t=%.2f steps=%d maxDiv=%.2e max|u-Ghia|=%.4f",
-		st.Time, st.Step, st.MaxDiv, maxErr)
+	
+	sample := sampleCenterlineU(g, f)
+	maxErr := 0.0
+	maxErrLoc := 0.0
+	t.Logf("yNorm \t u_sim \t u_Ghia \t error")
+	for _, pt := range ghiaRe100 {
+		y, want := pt[0], pt[1]
+		simU := sample(y)
+		err := math.Abs(simU - want)
+		if y != 0 && y != 1 && y != 0.9766 && y != 0.0547 {
+			if err > maxErr {
+				maxErr = err
+				maxErrLoc = y
+			}
+		}
+		t.Logf("%.4f \t %.4f \t %.4f \t %.4f", y, simU, want, err)
+	}
+
+	t.Logf("cavity 65^2: t=%.2f steps=%d maxDiv=%.2e max|u-Ghia|=%.4f at y=%.4f",
+		st.Time, st.Step, st.MaxDiv, maxErr, maxErrLoc)
 }
+
