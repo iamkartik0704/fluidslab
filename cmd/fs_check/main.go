@@ -38,7 +38,6 @@ func runFS() {
 	cfg.Numerical.PoissonTol = 1e-6
 	cfg.Numerical.FreeSlip = true
 	cfg.Numerical.SecondOrderAdvect = false
-	cfg.Numerical.DensityBug = false
 	cfg.Numerical.ClipRedistribute = true
 	cfg.Numerical.SplitDivFix = true
 	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0

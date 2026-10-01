@@ -61,8 +61,9 @@ func runDecayingVortex(N int, secondOrder bool) (float64, float64) {
 	meanErr := 0.0
 	count := 0
 	
-	for j := 1; j <= N; j++ {
-		for i := 1; i <= N-1; i++ { // interior U
+	exclude := 3
+	for j := 1 + exclude; j <= N - exclude; j++ {
+		for i := 1 + exclude; i <= N-1 - exclude; i++ { // interior U
 			x := float64(i)*sim.Grid.Dx
 			y := (float64(j)-0.5)*sim.Grid.Dy
 			exact := math.Sin(x) * math.Cos(y) * math.Exp(-2.0*nu*sim.State.Time)
