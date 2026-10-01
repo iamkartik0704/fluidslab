@@ -44,15 +44,17 @@ func TestTScaleMapping(t *testing.T) {
 	g := 9.81
 	L0 := 0.05715
 	
-	// Default time scale t* = t * sqrt(2g/L0) (i.e. H0/L0 = 2, H0 = 2*L0)
-	expectedTStar := 1.0 * math.Sqrt(2*g/L0)
-	if math.Abs(expectedTStar-18.528548) > 1e-3 {
-		t.Errorf("Expected T* for t=1s is 18.5285, got %f", expectedTStar)
+	// TimeScaleSqrt2gOverL0 (H0 = 2*L0)
+	expectedTStar2 := 1.0 * math.Sqrt(2*g/L0)
+	if math.Abs(expectedTStar2-18.528548) > 1e-3 {
+		t.Errorf("Expected T* for t=1s is 18.5285, got %f", expectedTStar2)
 	}
-	
-	// Benchmark time scale tau = t * sqrt(2g/a) (where a is L0 for square columns H0/L0 = 1).
-	// If a = L0, then tau = t * sqrt(2g/L0).
-	// This matches the non-dimensionalization exactly.
+
+	// TimeScaleSqrtgOverL0 (H0 = L0)
+	expectedTStar1 := 1.0 * math.Sqrt(g/L0)
+	if math.Abs(expectedTStar1-13.10166) > 1e-3 {
+		t.Errorf("Expected T* for t=1s is 13.10166, got %f", expectedTStar1)
+	}
 }
 
 func TestValidateMartinData(t *testing.T) {

@@ -48,7 +48,6 @@ func NewSimulation(cfg Config, nx, ny int, width, height float64, enclosed bool)
 	return s
 }
 
-// Step advances one timestep; dt<0 means automatic (ComputeDt).
 func (s *Simulation) Step(dtIn float64) error {
 	g, f, cfg := s.Grid, s.Fields, &s.Cfg
 
@@ -57,22 +56,39 @@ func (s *Simulation) Step(dtIn float64) error {
 		dt = ComputeDt(g, f, cfg, &s.State)
 	}
 
-	Predict(g, f, cfg, dt, s.muScratch)
-	ApplyStarBC(f, cfg, g)
-	res := Project(g, f, cfg, dt, s.scratch)
-	ApplyVelocityBC(f, cfg, g)
+	nMom := cfg.Numerical.SubstepMom
+	if nMom <= 0 { nMom = 1 }
+	nVOF := cfg.Numerical.SubstepVOF
+	if nVOF <= 0 { nVOF = 1 }
 
-	if !res.Converged {
-		return fmt.Errorf("step %d: Poisson not converged (iters=%d relRes=%.3e)",
-			s.State.Step+1, res.Iterations, res.Residual)
+	dtMom := dt / float64(nMom)
+	dtVOF := dt / float64(nVOF)
+
+	iterSum := 0
+	resLast := 0.0
+	for i := 0; i < nMom; i++ {
+		Predict(g, f, cfg, dtMom, s.muScratch)
+		ApplyStarBC(f, cfg, g)
+		res := Project(g, f, cfg, dtMom, s.scratch)
+		ApplyVelocityBC(f, cfg, g)
+		if !res.Converged {
+			return fmt.Errorf("step %d (substep %d): Poisson not converged (iters=%d relRes=%.3e)",
+				s.State.Step+1, i+1, res.Iterations, res.Residual)
+		}
+		iterSum += res.Iterations
+		resLast = res.Residual
 	}
 
-	deltaX, deltaY, deltaClip, outflow, cflWarns := AdvectAlpha(g, f, cfg, dt, s.State.Step)
-	s.State.VolSweepX += deltaX
-	s.State.VolSweepY += deltaY
-	s.State.VolClip += deltaClip
-	s.State.ClippedMass += deltaClip // We'll keep ClippedMass tracking deltaClip as well just in case.
-	s.State.TopOutflow += outflow
+	cflWarns := 0
+	for i := 0; i < nVOF; i++ {
+		deltaX, deltaY, deltaClip, outflow, warns := AdvectAlpha(g, f, cfg, dtVOF, s.State.Step)
+		s.State.VolSweepX += deltaX
+		s.State.VolSweepY += deltaY
+		s.State.VolClip += deltaClip
+		s.State.ClippedMass += deltaClip
+		s.State.TopOutflow += outflow
+		cflWarns += warns
+	}
 	s.State.CFLWarnings += cflWarns
 
 	UpdateProperties(g, f, cfg)
@@ -81,8 +97,8 @@ func (s *Simulation) Step(dtIn float64) error {
 	s.State.Step++
 	s.State.Time += dt
 	s.State.DT = dt
-	s.State.PoissonIter = res.Iterations
-	s.State.PoissonResidual = res.Residual
+	s.State.PoissonIter = iterSum
+	s.State.PoissonResidual = resLast
 	s.State.MaxDiv = MaxAbsDiv(g, f)
 	s.UpdateDiagnostics()
 	return nil

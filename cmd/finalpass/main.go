@@ -27,6 +27,12 @@ type BenchmarkData struct {
 				T []float64 `json:"T"`
 			} `json:"mean"`
 		} `json:"a_2p25_in"`
+		A1p125In struct {
+			Mean struct {
+				Z []float64 `json:"Z"`
+				T []float64 `json:"T"`
+			} `json:"mean"`
+		} `json:"a_1p125_in"`
 	} `json:"scales"`
 }
 
@@ -70,7 +76,7 @@ func getGitInfo() (string, bool) {
 	return hash, dirty
 }
 
-func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale float64, rhoRatio float64, gitHash string, gitDirty bool) RunResult {
+func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale float64, subMom, subVOF int, rhoRatio float64, gitHash string, gitDirty bool) RunResult {
 	start := time.Now()
 	
 	L0 := 0.05715
@@ -101,6 +107,9 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 	cfg.Numerical.ViscousCFL *= dtScale
 	cfg.Numerical.GravityCFL *= dtScale
 	cfg.Numerical.MaxDT *= dtScale
+
+	cfg.Numerical.SubstepMom = subMom
+	cfg.Numerical.SubstepVOF = subVOF
 
 	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0 
 	
@@ -196,92 +205,111 @@ func main() {
 	}
 	var data BenchmarkData
 	json.Unmarshal(b, &data)
-	
-	Z_exp := data.Scales.A2p25In.Mean.Z
-	T_exp := data.Scales.A2p25In.Mean.T
 
 	gitHash, gitDirty := getGitInfo()
 	fmt.Printf("Git State: commit=%s dirty=%v\n\n", gitHash, gitDirty)
 
 	// 1. Matrix cases
 	runs := []RunResult{
-		runSimAttr("N32_FSfalse_VLfalse", 32, false, false, 1.0, 1000.0, gitHash, gitDirty),
-		runSimAttr("N32_FSfalse_VLtrue", 32, false, true, 1.0, 1000.0, gitHash, gitDirty),
-		runSimAttr("N32_FStrue_VLfalse", 32, true, false, 1.0, 1000.0, gitHash, gitDirty),
-		runSimAttr("N32_FStrue_VLtrue", 32, true, true, 1.0, 1000.0, gitHash, gitDirty),
-		// 4. Convergence series (need N=8, N=16 as well)
-		runSimAttr("N8_FStrue_VLfalse", 8, true, false, 1.0, 1000.0, gitHash, gitDirty),
-		runSimAttr("N16_FStrue_VLfalse", 16, true, false, 1.0, 1000.0, gitHash, gitDirty),
-		runSimAttr("N8_FStrue_VLtrue", 8, true, true, 1.0, 1000.0, gitHash, gitDirty),
-		runSimAttr("N16_FStrue_VLtrue", 16, true, true, 1.0, 1000.0, gitHash, gitDirty),
-		// 5. Time-step series (dt=1/2, 1/4, 1/8) for 16, FS, VL
-		runSimAttr("N16_FStrue_VLtrue_dt2", 16, true, true, 0.5, 1000.0, gitHash, gitDirty),
-		runSimAttr("N16_FStrue_VLtrue_dt4", 16, true, true, 0.25, 1000.0, gitHash, gitDirty),
-		runSimAttr("N16_FStrue_VLtrue_dt8", 16, true, true, 0.125, 1000.0, gitHash, gitDirty),
+		// Native dt: N=8, 16, 32
+		runSimAttr("N8_FStrue_VLtrue", 8, true, true, 1.0, 1, 1, 1000.0, gitHash, gitDirty),
+		runSimAttr("N16_FStrue_VLtrue", 16, true, true, 1.0, 1, 1, 1000.0, gitHash, gitDirty),
+		runSimAttr("N32_FStrue_VLtrue", 32, true, true, 1.0, 1, 1, 1000.0, gitHash, gitDirty),
+		// dt/4: N=8, 16, 32
+		runSimAttr("N8_FStrue_VLtrue_dt4", 8, true, true, 0.25, 1, 1, 1000.0, gitHash, gitDirty),
+		runSimAttr("N16_FStrue_VLtrue_dt4", 16, true, true, 0.25, 1, 1, 1000.0, gitHash, gitDirty),
+		runSimAttr("N32_FStrue_VLtrue_dt4", 32, true, true, 0.25, 1, 1, 1000.0, gitHash, gitDirty),
+		// Substepped
+		runSimAttr("N16_FStrue_VLtrue_subVOF4", 16, true, true, 1.0, 1, 4, 1000.0, gitHash, gitDirty),
+		runSimAttr("N16_FStrue_VLtrue_subMom4", 16, true, true, 1.0, 4, 1, 1000.0, gitHash, gitDirty),
+		// Reference
+		runSimAttr("N16_FStrue_VLfalse", 16, true, false, 1.0, 1, 1, 1000.0, gitHash, gitDirty),
+		runSimAttr("N16_FSfalse_VLtrue", 16, false, true, 1.0, 1, 1, 1000.0, gitHash, gitDirty),
 	}
 	
-	fmt.Println("\n--- Convergence Series (T_sim at Z=3,5,7,10,14) ---")
-	targetZs := []float64{3, 5, 7, 10, 14}
+	fmt.Println("\n--- Convergence Series (T_sim at Z=1.44, 3, 5, 7, 10, 14) ---")
+	targetZs := []float64{1.44, 3, 5, 7, 10, 14}
 	for _, r := range runs {
-		fmt.Printf("%s\n", r.Name)
+		fmt.Printf("%s (WallTime: %v)\n", r.Name, r.WallTime)
 		alignedT := benchmark.AlignTime(r.Z_sim, r.T_sim, data.TimeNormalisation.AnchorZ, data.TimeNormalisation.AnchorT)
 		for _, z := range targetZs {
 			t_sim := benchmark.InterpTSim(r.Z_sim, r.T_sim, z)
 			t_sim_aligned := benchmark.InterpTSim(r.Z_sim, alignedT, z)
-			fmt.Printf("  Z=%.1f: T_sim_raw=%.3f T_sim_aligned=%.3f\n", z, t_sim, t_sim_aligned)
+			fmt.Printf("  Z=%.2f: T_sim_raw=%.3f T_sim_aligned=%.3f\n", z, t_sim, t_sim_aligned)
 		}
 	}
 	
-	fmt.Println("\n--- Time-step Series CFL Max ---")
-	for _, r := range runs {
-		fmt.Printf("%s: CFLMax=%.3f\n", r.Name, r.CFLMax)
-	}
-	
-	fmt.Println("\n--- Matrix Stats ---")
-	for _, r := range runs {
-		fmt.Printf("%s: WallTime=%v Steps=%d MaxDiv=%.2e FinalDiv=%.2e MaxVolDriftFrac=%.2e\n", 
-			r.Name, r.WallTime, r.Steps, r.MaxDiv, r.FinalDiv, r.MaxVolDrift)
-		fmt.Printf("  Poisson Windows (Mean / Max):\n")
-		wNames := []string{"0-2", "2-4", "4-8", "8-12"}
-		for i, w := range r.Windows {
-			mean := 0.0
-			if w.CountIter > 0 {
-				mean = float64(w.SumIter) / float64(w.CountIter)
-			}
-			fmt.Printf("    t* %s: Mean=%.1f Max=%d\n", wNames[i], mean, w.MaxIter)
-		}
-	}
-
-	// Full benchcompare for N16 and N32 cases
 	fmt.Println("\n--- Full Benchcompare ---")
-	for _, r := range runs {
-		fmt.Printf("%s\n", r.Name)
+	benchConfigs := []int{1, 2, 4, 8, 9} // indices of interesting runs (N16, N32 native, N16 dt4, N16 FO FS, N16 VL NS)
+	
+	for _, confIdx := range benchConfigs {
+		r := runs[confIdx]
+		fmt.Printf("\nBenchcompare for %s:\n", r.Name)
 		alignedT := benchmark.AlignTime(r.Z_sim, r.T_sim, data.TimeNormalisation.AnchorZ, data.TimeNormalisation.AnchorT)
-		for i, z := range Z_exp {
-			if z < 1.44 || z > r.Z_sim[len(r.Z_sim)-1] { continue }
-			t_sim := benchmark.InterpTSim(r.Z_sim, r.T_sim, z)
-			t_sim_aligned := benchmark.InterpTSim(r.Z_sim, alignedT, z)
-			fmt.Printf("  Z=%.2f: T_exp=%.2f T_raw=%.2f T_aligned=%.2f dT/T_raw=%.1f%%\n", 
-				z, T_exp[i], t_sim, t_sim_aligned, 100*(t_sim-T_exp[i])/T_exp[i])
-		}
-	}
-	
-	// Attribution requires density ratio 100 runs
-	r_dens_FO := runSimAttr("N16_FStrue_VLfalse_rho100", 16, true, false, 1.0, 100.0, gitHash, gitDirty)
-	r_dens_VL := runSimAttr("N16_FStrue_VLtrue_rho100", 16, true, true, 1.0, 100.0, gitHash, gitDirty)
-	
-	attrRuns := append(runs, r_dens_FO, r_dens_VL)
-	
-	fmt.Println("\n--- Revised Attribution Table (T_sim at Z=3, 5, 7, 10) ---")
-	targetZsAttr := []float64{3, 5, 7, 10}
-	for _, r := range attrRuns {
-		fmt.Printf("%s\n", r.Name)
-		alignedT := benchmark.AlignTime(r.Z_sim, r.T_sim, data.TimeNormalisation.AnchorZ, data.TimeNormalisation.AnchorT)
-		for _, z := range targetZsAttr {
-			t_sim := benchmark.InterpTSim(r.Z_sim, r.T_sim, z)
-			t_sim_aligned := benchmark.InterpTSim(r.Z_sim, alignedT, z)
-			t_sim_01 := benchmark.InterpTSim(r.Z_01, r.T_sim, z)
-			fmt.Printf("  Z=%.1f: T_raw=%.3f T_aligned=%.3f T_raw(0.1)=%.3f\n", z, t_sim, t_sim_aligned, t_sim_01)
+		
+		for _, aType := range []string{"a=2.25", "a=1.125"} {
+			fmt.Printf("  [Data: %s]\n", aType)
+			
+			var Z_exp, T_exp []float64
+			if aType == "a=2.25" {
+				Z_exp = data.Scales.A2p25In.Mean.Z
+				T_exp = data.Scales.A2p25In.Mean.T
+			} else {
+				Z_exp = data.Scales.A1p125In.Mean.Z
+				T_exp = data.Scales.A1p125In.Mean.T
+			}
+			
+			var rmsRaw7, rmsAligned7 float64
+			var maxRaw7, maxAligned7 float64
+			var countRMS7 int
+			
+			var rmsRaw14, rmsAligned14 float64
+			var maxRaw14, maxAligned14 float64
+			var countRMS14 int
+			
+			for i, z := range Z_exp {
+				if z < 1.44 || z > r.Z_sim[len(r.Z_sim)-1] { continue }
+				t_sim := benchmark.InterpTSim(r.Z_sim, r.T_sim, z)
+				t_sim_aligned := benchmark.InterpTSim(r.Z_sim, alignedT, z)
+				dT := t_sim - T_exp[i]
+				dT_aligned := t_sim_aligned - T_exp[i]
+				
+				pctRaw := 100 * dT / T_exp[i]
+				pctAligned := 100 * dT_aligned / T_exp[i]
+				
+				var inBand string
+				if pctAligned >= -5.0 && pctAligned <= 5.0 {
+					inBand = "IN_BAND"
+				} else {
+					inBand = "OUT"
+				}
+				
+				fmt.Printf("    Z=%.2f: T_exp=%.2f T_raw=%.2f T_aligned=%.2f dT/T_raw=%+5.1f%% dT/T_aligned=%+5.1f%% [%s]\n", 
+					z, T_exp[i], t_sim, t_sim_aligned, pctRaw, pctAligned, inBand)
+					
+				if z <= 7.0 {
+					rmsRaw7 += pctRaw * pctRaw
+					rmsAligned7 += pctAligned * pctAligned
+					countRMS7++
+					if math.Abs(pctRaw) > maxRaw7 { maxRaw7 = math.Abs(pctRaw) }
+					if math.Abs(pctAligned) > maxAligned7 { maxAligned7 = math.Abs(pctAligned) }
+				}
+				if z <= 14.0 {
+					rmsRaw14 += pctRaw * pctRaw
+					rmsAligned14 += pctAligned * pctAligned
+					countRMS14++
+					if math.Abs(pctRaw) > maxRaw14 { maxRaw14 = math.Abs(pctRaw) }
+					if math.Abs(pctAligned) > maxAligned14 { maxAligned14 = math.Abs(pctAligned) }
+				}
+			}
+			if countRMS7 > 0 {
+				fmt.Printf("    -> [1.44, 7]  RMS_raw=%.1f%% Max_raw=%.1f%% | RMS_aligned=%.1f%% Max_aligned=%.1f%%\n", 
+					math.Sqrt(rmsRaw7/float64(countRMS7)), maxRaw7, math.Sqrt(rmsAligned7/float64(countRMS7)), maxAligned7)
+			}
+			if countRMS14 > 0 {
+				fmt.Printf("    -> [1.44, 14] RMS_raw=%.1f%% Max_raw=%.1f%% | RMS_aligned=%.1f%% Max_aligned=%.1f%%\n", 
+					math.Sqrt(rmsRaw14/float64(countRMS14)), maxRaw14, math.Sqrt(rmsAligned14/float64(countRMS14)), maxAligned14)
+			}
 		}
 	}
 }

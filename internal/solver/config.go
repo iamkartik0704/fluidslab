@@ -81,6 +81,8 @@ type Config struct {
 		SkipAdvection    bool
 		SkipViscosity    bool
 		ClipRedistribute bool
+		SubstepMom       int
+		SubstepVOF       int
 	}
 	TimeScale TimeScaleConvention
 	XStarDef  XStarConvention

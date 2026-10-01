@@ -59,6 +59,12 @@ func runCavity(n int, tMax float64, t *testing.T, secondOrder bool) (*Grid, *Fie
 // yNorm is measured from the FLOOR (Ghia's convention), so y=1 is the lid.
 func sampleCenterlineU(g *Grid, f *Fields) func(yNorm float64) float64 {
 	return func(yNorm float64) float64 {
+		if yNorm <= 0.0 {
+			return 0.0 // strict no-slip floor
+		}
+		if yNorm >= 1.0 {
+			return 1.0 // strict no-slip lid (driven at 1.0)
+		}
 		y := yNorm * float64(g.Ny) * g.Dy
 		jf := y/g.Dy + 0.5 // u faces sit at y=(j-1/2)dy... but padded idxU row j has y=(j-1/2)dy? see grid.go: Yu[j]=(j-0.5)dy
 		j0 := int(math.Floor(jf))
