@@ -16,12 +16,6 @@ import (
 func main() {
 	mode := flag.String("mode", "dambreak", "serve | dambreak | single | cavity")
 	port := flag.Int("port", 8080, "TCP port (0 = first free port)")
-	
-	// If PORT environment variable is set (e.g. by Render/Fly.io), override the flag default
-	if envPort := os.Getenv("PORT"); envPort != "" {
-		fmt.Sscanf(envPort, "%d", port)
-	}
-	
 	noBrowser := flag.Bool("no-browser", true, "do not auto-open the browser")
 	nx := flag.Int("nx", 128, "interior cells in x")
 	ny := flag.Int("ny", 192, "interior cells in y")
@@ -35,6 +29,11 @@ func main() {
 	cpuprofile := flag.String("cpuprofile", "", "write cpu profile to file")
 	threads := flag.Int("threads", runtime.NumCPU(), "number of threads for poisson solver")
 	flag.Parse()
+
+	// If PORT environment variable is set (e.g. by Render/Fly.io), override the flag
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		fmt.Sscanf(envPort, "%d", port)
+	}
 
 	if *cpuprofile != "" {
 		f, err := os.Create(*cpuprofile)
