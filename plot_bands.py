@@ -39,8 +39,8 @@ plt.plot(z1, data['scales']['a_1p125_in']['mean']['T'], 'b--', label='M&M (a=1.1
 
 # Plot simulation runs
 runs = [
-    ('N16_FStrue_VLtrue', 'VL FS N=16 (Native dt)', 'r-'),
-    ('N32_FStrue_VLtrue', 'VL FS N=32 (Native dt)', 'm-'),
+    ('N16_FStrue_VLtrue_dt4', 'VL FS N=16 (dt/4)', 'r-'),
+    ('N32_FStrue_VLtrue_dt4', 'VL FS N=32 (dt/4)', 'm-'),
     ('N16_FStrue_VLfalse', 'FO FS N=16 (Ref)', 'g-'),
     ('N16_FSfalse_VLtrue', 'VL NS N=16', 'c-'),
 ]
