@@ -144,13 +144,13 @@ func SolvePoissonPCG(g *Grid, f *Fields, b, p []float64, tol float64, maxIter in
 	scratch [][]float64) PoissonResult {
 
 	z, r, s, Ap := scratch[0], scratch[1], scratch[2], scratch[3]
-	
+
 	// Precompute matrix coefficients for matrix-free matvec
 	diag := scratch[4]
-	Ax := scratch[5] // east coefficient
-	Ay := scratch[6] // north coefficient
+	Ax := scratch[5]   // east coefficient
+	Ay := scratch[6]   // north coefficient
 	invE := scratch[7] // IC(0) inverse diagonal
-	
+
 	runParallel(g.Ny, threads, func(jStart, jEnd int) {
 		for j := jStart; j <= jEnd; j++ {
 			row := j * g.NxG
@@ -162,12 +162,12 @@ func SolvePoissonPCG(g *Grid, f *Fields, b, p []float64, tol float64, maxIter in
 				if !c.nElim {
 					Ay[idx] = c.n * g.InvDy2
 				} else {
-				    Ay[idx] = 0
+					Ay[idx] = 0
 				}
 			}
 		}
 	})
-	
+
 	// Precompute IC(0) invE sequentially (cannot be parallelized easily)
 	for j := 1; j <= g.Ny; j++ {
 		row := j * g.NxG
@@ -183,7 +183,7 @@ func SolvePoissonPCG(g *Grid, f *Fields, b, p []float64, tol float64, maxIter in
 			invE[idx] = 1.0 / val
 		}
 	}
-	
+
 	applyOp := func(in, out []float64) {
 		runParallel(g.Ny, threads, func(jStart, jEnd int) {
 			for j := jStart; j <= jEnd; j++ {
@@ -214,7 +214,7 @@ func SolvePoissonPCG(g *Grid, f *Fields, b, p []float64, tol float64, maxIter in
 	// r = b - A p ; also Jacobi-diagonal preconditioner M = diag(A).
 	var rho, bNorm float64
 	pin := g.PinnedIdx()
-	
+
 	// Parallel initial residual
 	bNormParts := make([]float64, threads)
 	runParallel(g.Ny, threads, func(jStart, jEnd int) {
@@ -237,7 +237,7 @@ func SolvePoissonPCG(g *Grid, f *Fields, b, p []float64, tol float64, maxIter in
 	for t := 0; t < threads; t++ {
 		bNorm += bNormParts[t]
 	}
-	
+
 	// Apply IC(0) preconditioner sequentially
 	for j := 1; j <= g.Ny; j++ {
 		row := j * g.NxG
@@ -274,7 +274,7 @@ func SolvePoissonPCG(g *Grid, f *Fields, b, p []float64, tol float64, maxIter in
 			z[idx] += val * invE[idx]
 		}
 	}
-	
+
 	rhoParts := make([]float64, threads)
 	runParallel(g.Ny, threads, func(jStart, jEnd int) {
 		tIdx := (jStart - 1) / ((g.Ny + threads - 1) / threads)
@@ -314,7 +314,7 @@ func SolvePoissonPCG(g *Grid, f *Fields, b, p []float64, tol float64, maxIter in
 		if pin >= 0 {
 			Ap[pin] = 0
 		}
-		
+
 		alpha := 0.0
 		alphaParts := make([]float64, threads)
 		runParallel(g.Ny, threads, func(jStart, jEnd int) {
@@ -344,7 +344,7 @@ func SolvePoissonPCG(g *Grid, f *Fields, b, p []float64, tol float64, maxIter in
 				}
 			}
 		})
-		
+
 		// IC(0) preconditioner sequentially
 		for j := 1; j <= g.Ny; j++ {
 			row := j * g.NxG
@@ -408,7 +408,7 @@ func SolvePoissonPCG(g *Grid, f *Fields, b, p []float64, tol float64, maxIter in
 
 		beta := rhoNew / rho
 		rho = rhoNew
-		
+
 		runParallel(g.Ny, threads, func(jStart, jEnd int) {
 			for j := jStart; j <= jEnd; j++ {
 				row := j * g.NxG
@@ -443,8 +443,6 @@ func residualNormThreads(g *Grid, r []float64, threads int) float64 {
 	return sum
 }
 
-
-
 // SolvePoissonSOR solves A p = b by successive over-relaxation. Reference
 // solver for the constant-density tests only.
 func SolvePoissonSOR(g *Grid, f *Fields, b, p []float64, tol float64, maxIter int, omega float64) PoissonResult {
@@ -475,13 +473,13 @@ func SolvePoissonSOR(g *Grid, f *Fields, b, p []float64, tol float64, maxIter in
 				if c.e > 0 {
 					off += c.e * g.InvDx2 * p[g.idxCC(i+1, j)]
 				}
-			if c.s > 0 {
-				off += c.s * g.InvDy2 * p[g.idxCC(i, j-1)]
-			}
-			if c.n > 0 && !c.nElim {
-				off += c.n * g.InvDy2 * p[g.idxCC(i, j+1)]
-			}
-			// A p = diag*p - off = b  =>  p = (b + off)/diag.
+				if c.s > 0 {
+					off += c.s * g.InvDy2 * p[g.idxCC(i, j-1)]
+				}
+				if c.n > 0 && !c.nElim {
+					off += c.n * g.InvDy2 * p[g.idxCC(i, j+1)]
+				}
+				// A p = diag*p - off = b  =>  p = (b + off)/diag.
 				p[idx] = (1-omega)*p[idx] + (omega/diag)*(b[idx]+off)
 			}
 		}

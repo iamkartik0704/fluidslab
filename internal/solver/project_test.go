@@ -117,7 +117,7 @@ func TestHydrostaticStillWaterGate(t *testing.T) {
 
 	scratch := allocScratch8(g)
 	muScratch := allocMuScratch(g)
-	
+
 	var st SimState
 	maxVel := 0.0
 	for step := 1; step <= 200; step++ {
@@ -148,7 +148,7 @@ func TestHydrostaticStillWaterGate(t *testing.T) {
 			if g.Yc[idx] < 0.9*hW {
 				// The total pressure includes the weight of the air column above the water.
 				airWeight := cfg.Physical.RhoA * cfg.Physical.Gravity * (cfg.Domain.Height - hW)
-				want := cfg.Physical.RhoW * cfg.Physical.Gravity * (hW - g.Yc[idx]) + airWeight
+				want := cfg.Physical.RhoW*cfg.Physical.Gravity*(hW-g.Yc[idx]) + airWeight
 				if d := math.Abs(f.P[idx] - want); d > pErr {
 					pErr = d
 				}
@@ -166,7 +166,7 @@ func TestHydrostaticThreeLayerGate(t *testing.T) {
 	cfg := DefaultConfig()
 	g := NewGrid(10, 10, 1.0, 1.0)
 	f := NewFields(g)
-	
+
 	for j := 1; j <= g.Ny; j++ {
 		for i := 1; i <= g.Nx; i++ {
 			idx := g.idxCC(i, j)
@@ -184,9 +184,9 @@ func TestHydrostaticThreeLayerGate(t *testing.T) {
 
 	scratch := allocScratch8(g)
 	muScratch := allocMuScratch(g)
-	
+
 	dt := 0.01
-	
+
 	Predict(g, f, &cfg, dt, muScratch)
 	ApplyStarBC(f, &cfg, g)
 	res := Project(g, f, &cfg, dt, scratch)

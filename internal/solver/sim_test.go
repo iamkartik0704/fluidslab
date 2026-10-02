@@ -19,7 +19,7 @@ func TestFrontInterpolation(t *testing.T) {
 	// Let's set cell i=4 (Xc = 0.35) to alpha=0.8
 	// Let's set cell i=5 (Xc = 0.45) to alpha=0.2
 	// Target alpha=0.5 crossing is exactly halfway between them: X = 0.40
-	
+
 	for i := 1; i <= g.Nx; i++ {
 		f.Alpha[g.idxCC(i, 1)] = 0.0 // default
 	}
@@ -35,7 +35,7 @@ func TestFrontInterpolation(t *testing.T) {
 	if math.Abs(sim.State.FrontX-expectedX) > 1e-6 {
 		t.Errorf("Expected FrontX %.4f, got %.4f", expectedX, sim.State.FrontX)
 	}
-	
+
 	// Test edge case: exact drop-off
 	f.Alpha[g.idxCC(4, 1)] = 1.0
 	f.Alpha[g.idxCC(5, 1)] = 0.0

@@ -14,8 +14,12 @@ func UpdateProperties(g *Grid, f *Fields, cfg *Config) {
 		for i := 0; i < g.NxG; i++ {
 			idx := g.idxCC(i, j)
 			alpha := f.Alpha[idx]
-			if alpha < 0 { alpha = 0 }
-			if alpha > 1 { alpha = 1 }
+			if alpha < 0 {
+				alpha = 0
+			}
+			if alpha > 1 {
+				alpha = 1
+			}
 			f.Rho[idx] = alpha*cfg.Physical.RhoW + (1-alpha)*cfg.Physical.RhoA
 			f.Mu[idx] = alpha*cfg.Physical.MuW + (1-alpha)*cfg.Physical.MuA
 		}
@@ -91,4 +95,3 @@ func ComputeFaceMu(g *Grid, f *Fields, muU, muV []float64) {
 		}
 	}
 }
-

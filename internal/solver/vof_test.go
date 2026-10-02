@@ -45,7 +45,7 @@ func TestVOFRigidBodyRotation(t *testing.T) {
 			perimeterCells := 2.0 * math.Pi * r / g.Dx
 			initialMass := 0.0
 			smearedCellsInitial := 0
-			
+
 			// Initialize
 			for j := 1; j <= g.Ny; j++ {
 				for i := 1; i <= g.Nx; i++ {
@@ -77,12 +77,12 @@ func TestVOFRigidBodyRotation(t *testing.T) {
 			finalMass := 0.0
 			smearedCells := 0
 			l1Error := 0.0
-			
+
 			for j := 1; j <= g.Ny; j++ {
 				for i := 1; i <= g.Nx; i++ {
 					alpha := f.Alpha[g.idxCC(i, j)]
 					finalMass += alpha
-					
+
 					// Recompute initial shape for L1 error
 					x := g.Xc[g.idxCC(i, j)]
 					y := g.Yc[g.idxCC(i, j)]
@@ -91,7 +91,7 @@ func TestVOFRigidBodyRotation(t *testing.T) {
 					if dist <= r {
 						expected = 1.0
 					}
-					l1Error += math.Abs(alpha - expected) * g.Dx * g.Dy
+					l1Error += math.Abs(alpha-expected) * g.Dx * g.Dy
 
 					// "smeared cells" defined as 0.01 < alpha < 0.99
 					if alpha > 0.01 && alpha < 0.99 {
@@ -102,14 +102,14 @@ func TestVOFRigidBodyRotation(t *testing.T) {
 
 			volErrPct := 100.0 * (finalMass - initialMass) / initialMass
 			interfaceWidth := float64(smearedCells) / perimeterCells
-			
+
 			t.Logf("Scheme: %s", tt.name)
 			t.Logf("  Init smeared cells: %d, Perimeter cells: %.1f", smearedCellsInitial, perimeterCells)
 			t.Logf("  Vol Err: %.3e %%", volErrPct)
 			t.Logf("  L1 Shape Error: %.6f", l1Error)
 			t.Logf("  Smeared Cells: %d", smearedCells)
 			t.Logf("  Interface Width (cells): %.2f", interfaceWidth)
-			
+
 			if tt.scheme == AdvectDonorAcceptor && smearedCells > 350 {
 				t.Errorf("Interface smeared too much: %d", smearedCells)
 			}
@@ -171,12 +171,11 @@ func TestVOFTranslation(t *testing.T) {
 	t.Logf("Translation Initial Mass: %.15e", initialMass)
 	t.Logf("Translation Final Mass:   %.15e", finalMass)
 	t.Logf("Translation Abs Error:    %.15e", err)
-	
+
 	if err > 1e-10 {
 		t.Errorf("Translation mass error too large: %.15e", err)
 	}
 }
-
 
 func TestHirtNicholsCF(t *testing.T) {
 	cfg := DefaultConfig()
@@ -200,10 +199,8 @@ func TestHirtNicholsCF(t *testing.T) {
 	cfBug := math.Max(0.0, fraction-(1.0-alphaD))
 	fluxBugFrac := math.Min(1.0, math.Min(f.Alpha[g.IdxCC(2, 1)]*fraction+cfBug, alphaD))
 	fluxBug := fluxBugFrac * 1.0
-	
+
 	if math.Abs(fluxBug-0.3) < 1e-6 {
 		t.Errorf("OldCFBug should yield the incorrect legacy flux, but it gave the correct flux.")
 	}
 }
-
-

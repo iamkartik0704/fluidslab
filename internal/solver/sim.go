@@ -10,10 +10,10 @@ import (
 // -> diagnostics. Alpha advection is a no-op at this milestone (alpha is
 // never advanced: single-fluid runs keep alpha constant).
 type Simulation struct {
-	Cfg   Config
-	Grid  *Grid
+	Cfg    Config
+	Grid   *Grid
 	Fields *Fields
-	State SimState
+	State  SimState
 
 	scratch   [][]float64 // 8 arrays of TotalCC: z, r, s, Ap, diag, Ax, Ay, b
 	muScratch [][]float64 // muU, muV
@@ -66,9 +66,13 @@ func (s *Simulation) Step(dtIn float64) error {
 	}
 
 	nMom := cfg.Numerical.SubstepMom
-	if nMom <= 0 { nMom = 1 }
+	if nMom <= 0 {
+		nMom = 1
+	}
 	nVOF := cfg.Numerical.SubstepVOF
-	if nVOF <= 0 { nVOF = 1 }
+	if nVOF <= 0 {
+		nVOF = 1
+	}
 
 	dtMom := dt / float64(nMom)
 	dtVOF := dt / float64(nVOF)
@@ -139,7 +143,7 @@ func (s *Simulation) UpdateDiagnostics() {
 			vol += f.Alpha[idx]
 		}
 	}
-	
+
 	findCrossing := func(threshold float64) float64 {
 		for i := g.Nx; i >= 1; i-- {
 			idx := g.idxCC(i, 1)
@@ -200,7 +204,7 @@ func (s *Simulation) UpdateDiagnostics() {
 	// Dimensionless terms
 	L0 := s.Cfg.Domain.L0
 	gConst := s.Cfg.Physical.Gravity
-	
+
 	s.State.FrontXStar = frontX / L0
 	s.State.FrontXStar01 = frontX01 / L0
 	s.State.FrontXStar001 = frontX001 / L0

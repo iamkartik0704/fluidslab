@@ -3,25 +3,25 @@ package solver
 import "math"
 
 type Fields struct {
-	Alpha []float64
-	Rho   []float64
-	Mu    []float64
-	P     []float64
-	U     []float64
-	V     []float64
-	UStar []float64
-	VStar []float64
-	RhoU  []float64
-	RhoV  []float64
-	DivU  []float64
+	Alpha      []float64
+	Rho        []float64
+	Mu         []float64
+	P          []float64
+	U          []float64
+	V          []float64
+	UStar      []float64
+	VStar      []float64
+	RhoU       []float64
+	RhoV       []float64
+	DivU       []float64
 	GradAlphaX []float64
 	GradAlphaY []float64
-	AlphaPrev []float64
+	AlphaPrev  []float64
 
-	FluxX []float64
-	FluxY []float64
+	FluxX       []float64
+	FluxY       []float64
 	CFLWarnings int
-	TopOutflow float64
+	TopOutflow  float64
 }
 
 func NewFields(g *Grid) *Fields {

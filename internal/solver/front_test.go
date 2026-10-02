@@ -15,7 +15,7 @@ func TestFrontInvariant(t *testing.T) {
 
 	sim := NewSimulation(cfg, cfg.Domain.Nx, cfg.Domain.Ny, cfg.Domain.Width, cfg.Domain.Height, false)
 	sim.InitDamBreak()
-	
+
 	// Check immediately after init
 	if sim.State.FrontXStar < 1.0 {
 		t.Errorf("Initial FrontXStar = %f, expected >= 1.0", sim.State.FrontXStar)

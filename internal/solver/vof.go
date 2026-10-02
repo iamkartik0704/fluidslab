@@ -20,7 +20,7 @@ func AdvectAlpha(g *Grid, f *Fields, cfg *Config, dt float64, step int) (float64
 	startSum := sumAlpha(g, f)
 
 	// Alternate sweep order each step to minimize directional bias
-	sweepXFirst := (step % 2 == 0)
+	sweepXFirst := (step%2 == 0)
 
 	var sumAfterX, sumAfterY float64
 
@@ -39,8 +39,8 @@ func AdvectAlpha(g *Grid, f *Fields, cfg *Config, dt float64, step int) (float64
 		ApplyAlphaBC(g, f)
 		sumAfterX = sumAlpha(g, f)
 	}
-	
-	// Determine the deltas. Note: if sweepXFirst is false, Y happened first, 
+
+	// Determine the deltas. Note: if sweepXFirst is false, Y happened first,
 	// so delta Y = sumAfterY - startSum, delta X = sumAfterX - sumAfterY
 	var deltaX, deltaY float64
 	if sweepXFirst {
@@ -74,7 +74,7 @@ func AdvectAlpha(g *Grid, f *Fields, cfg *Config, dt float64, step int) (float64
 							f.Alpha[idx] = 1.0
 						}
 						changed = true
-						
+
 						if cfg.Numerical.ClipRedistribute {
 							var nbrs []int
 							for _, n := range []int{g.idxCC(i-1, j), g.idxCC(i+1, j), g.idxCC(i, j-1), g.idxCC(i, j+1)} {
@@ -128,7 +128,7 @@ func sweepX(g *Grid, f *Fields, cfg *Config, dt float64) {
 		for i := 1; i <= g.Nx; i++ {
 			idx := g.idxCC(i, j)
 			f.Alpha[idx] += (f.FluxX[i-1] - f.FluxX[i]) * g.InvDx
-			
+
 			if cfg.Numerical.DilatationCorr {
 				// Add dilatation correction: dt * alpha_cell * (u_east - u_west) / dx
 				uE := f.U[g.idxU(i, j)]
@@ -213,7 +213,7 @@ func computeFluxX(g *Grid, f *Fields, i, j int, u, dt float64, cfg *Config) floa
 	// Hirt & Nichols CF term
 	cf := math.Max((1.0-alphaAD)*fraction-(1.0-alphaD), 0.0)
 	fluxFrac := math.Min(alphaAD*fraction+cf, alphaD)
-	
+
 	// Keep the swept-volume cap (flux <= fraction). This is needed to ensure
 	// we never advect more fluid than the total volume of fluid + air that actually
 	// crosses the face in one timestep, preventing unphysical overshoots.
@@ -254,7 +254,7 @@ func computeFluxY(g *Grid, f *Fields, i, j int, v, dt float64, cfg *Config) floa
 
 	cf := math.Max((1.0-alphaAD)*fraction-(1.0-alphaD), 0.0)
 	fluxFrac := math.Min(alphaAD*fraction+cf, alphaD)
-	
+
 	// Swept-volume cap: ensures flux doesn't exceed total volume crossing the face
 	fluxFrac = math.Min(fraction, fluxFrac)
 
@@ -276,5 +276,3 @@ func isSteepY(g *Grid, f *Fields, i, j int) bool {
 	dy := f.Alpha[g.idxCC(i, j+1)] - f.Alpha[g.idxCC(i, j-1)]
 	return math.Abs(dy) >= math.Abs(dx)
 }
-
-

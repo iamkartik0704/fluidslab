@@ -36,14 +36,14 @@ func TestInterpolateRhoToFaces(t *testing.T) {
 					idxU := g.idxU(i, j)
 					rhoL := f.Rho[g.idxCC(i, j)]
 					rhoR := f.Rho[g.idxCC(i+1, j)]
-					
+
 					var expected float64
 					if tc.face == "harmonic" {
 						expected = 2.0 / (1.0/rhoL + 1.0/rhoR)
 					} else {
 						expected = 0.5 * (rhoL + rhoR)
 					}
-					
+
 					if f.RhoU[idxU] != expected {
 						t.Errorf("U face (i=%d, j=%d) expected %v, got %v", i, j, expected, f.RhoU[idxU])
 					}
@@ -56,14 +56,14 @@ func TestInterpolateRhoToFaces(t *testing.T) {
 					idxV := g.idxV(i, j)
 					rhoB := f.Rho[g.idxCC(i, j)]
 					rhoT := f.Rho[g.idxCC(i, j+1)]
-					
+
 					var expected float64
 					if tc.face == "harmonic" {
 						expected = 2.0 / (1.0/rhoB + 1.0/rhoT)
 					} else {
 						expected = 0.5 * (rhoB + rhoT)
 					}
-					
+
 					if f.RhoV[idxV] != expected {
 						t.Errorf("V face (i=%d, j=%d) expected %v, got %v", i, j, expected, f.RhoV[idxV])
 					}

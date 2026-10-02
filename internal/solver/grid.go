@@ -34,19 +34,19 @@ type Grid struct {
 	// PinnedCell, when non-nil, holds (i,j) of a cell whose pressure is held
 	// at zero. Used by fully enclosed (cavity) runs where all-Neumann BCs
 	// would otherwise make the Poisson operator singular.
-	PinnedCell [2]int
-	hasPin     bool
-	Nx, Ny int
-	NxG, NyG int
-	Dx, Dy float64
-	InvDx, InvDy float64
+	PinnedCell     [2]int
+	hasPin         bool
+	Nx, Ny         int
+	NxG, NyG       int
+	Dx, Dy         float64
+	InvDx, InvDy   float64
 	InvDx2, InvDy2 float64
-	Xc []float64
-	Yc []float64
-	Xu []float64
-	Yu []float64
-	Xv []float64
-	Yv []float64
+	Xc             []float64
+	Yc             []float64
+	Xu             []float64
+	Yu             []float64
+	Xv             []float64
+	Yv             []float64
 }
 
 func NewGrid(nx, ny int, width, height float64) *Grid {
@@ -123,12 +123,12 @@ func (g *Grid) idxV(i, j int) int {
 	return j*g.NxG + i
 }
 
-func (g *Grid) CellCount() int { return g.Nx * g.Ny }
+func (g *Grid) CellCount() int  { return g.Nx * g.Ny }
 func (g *Grid) UFaceCount() int { return (g.Nx + 1) * g.Ny }
 func (g *Grid) VFaceCount() int { return g.Nx * (g.Ny + 1) }
-func (g *Grid) TotalCC() int { return g.NxG * g.NyG }
-func (g *Grid) TotalU() int { return (g.NxG + 1) * g.NyG }
-func (g *Grid) TotalV() int { return g.NxG * (g.NyG + 1) }
+func (g *Grid) TotalCC() int    { return g.NxG * g.NyG }
+func (g *Grid) TotalU() int     { return (g.NxG + 1) * g.NyG }
+func (g *Grid) TotalV() int     { return g.NxG * (g.NyG + 1) }
 
 func (g *Grid) IJCC(idx int) (int, int) {
 	return idx % g.NxG, idx / g.NxG
@@ -197,6 +197,6 @@ func (g *Grid) PinnedIdx() int {
 }
 func (g *Grid) IdxCC(i, j int) int { return g.idxCC(i, j) }
 
-func (g *Grid) IdxU(i, j int) int  { return g.idxU(i, j) }
+func (g *Grid) IdxU(i, j int) int { return g.idxU(i, j) }
 
-func (g *Grid) IdxV(i, j int) int  { return g.idxV(i, j) }
+func (g *Grid) IdxV(i, j int) int { return g.idxV(i, j) }

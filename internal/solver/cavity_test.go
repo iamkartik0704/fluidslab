@@ -178,7 +178,7 @@ func TestCavityGridConvergenceVanLeer(t *testing.T) {
 // solver, so it only runs when DAMBREAK_LONG=1 is set.
 func TestCavityFine65(t *testing.T) {
 	g, f, st := runCavity(65, 30.0, t, false)
-	
+
 	sample := sampleCenterlineU(g, f)
 	maxErr := 0.0
 	maxErrLoc := 0.0
@@ -226,4 +226,3 @@ func TestCavityFullConvergence(t *testing.T) {
 		}
 	}
 }
-

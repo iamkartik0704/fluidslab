@@ -250,5 +250,6 @@ func predict(g *Grid, f *Fields, cfg *Config, dt float64, muU, muV []float64) {
 	}
 }
 
-
-func TvdGradExport(uUU, uU, uC, uD, h float64, secondOrder bool) float64 { return tvdGrad(uUU, uU, uC, uD, h, secondOrder) }
+func TvdGradExport(uUU, uU, uC, uD, h float64, secondOrder bool) float64 {
+	return tvdGrad(uUU, uU, uC, uD, h, secondOrder)
+}

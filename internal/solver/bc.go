@@ -22,6 +22,7 @@ package solver
 //     set to minus the interior value so a central-difference wall shear
 //     evaluates to 2*u_interior/dn.
 //   - Free-slip (cfg.Numerical.FreeSlip): tangential ghost = +interior.
+//
 // ApplyStarBC imposes the same constraints on the predictor output UStar/VStar
 // so the Poisson RHS is consistent at the open boundary: wall faces zero,
 // zero-gradient at the top.

@@ -36,12 +36,12 @@ const (
 
 type Config struct {
 	Domain struct {
-		L0          float64
-		H0          float64
-		Width       float64
-		Height      float64
-		Nx          int
-		Ny          int
+		L0     float64
+		H0     float64
+		Width  float64
+		Height float64
+		Nx     int
+		Ny     int
 	}
 	Physical struct {
 		RhoW        float64
@@ -51,47 +51,47 @@ type Config struct {
 		Gravity     float64
 		Sigma       float64 // CSF surface tension coefficient; RESERVED, not yet implemented
 		DensityRamp struct {
-			Enabled   bool
-			StartRatio float64
+			Enabled     bool
+			StartRatio  float64
 			TargetRatio float64
-			RampSteps  int
+			RampSteps   int
 		}
 	}
 	Numerical struct {
-		CFL              float64
-		ViscousCFL       float64
-		GravityCFL       float64
-		MaxDT            float64
-		DTGrowthFactor   float64
-		PoissonTol       float64
-		PoissonMaxIter   int
-		Preconditioner   string
-		PoissonSolver    PoissonSolverType
-		AdvectScheme     AdvectScheme
-		FaceRhoAvg       string
-		FreeSlip         bool
-		OpenTop          bool    // true: open boundary (p=0, zero-gradient); false: solid lid for cavity runs
-		LidVelocity      float64 // tangential velocity of the closed top wall (cavity benchmark)
-		ClipAlpha        bool
-		DilatationCorr   bool    // apply VOF dilatation correction
-		SplitDivFix      bool    // fix split-sweep non-conservation
-		SecondOrderAdvect bool   // use QUICK/van Leer for momentum
-		RemoveFlotsam    bool
-		FlotsamThreshold float64
-		SkipAdvection    bool
-		SkipViscosity    bool
-		ClipRedistribute bool
-		SubstepMom       int
-		SubstepVOF       int
-		MaxCFLFrac       float64 // if > 0, cap dt so that CFL <= MaxCFLFrac * native CFL limit
+		CFL               float64
+		ViscousCFL        float64
+		GravityCFL        float64
+		MaxDT             float64
+		DTGrowthFactor    float64
+		PoissonTol        float64
+		PoissonMaxIter    int
+		Preconditioner    string
+		PoissonSolver     PoissonSolverType
+		AdvectScheme      AdvectScheme
+		FaceRhoAvg        string
+		FreeSlip          bool
+		OpenTop           bool    // true: open boundary (p=0, zero-gradient); false: solid lid for cavity runs
+		LidVelocity       float64 // tangential velocity of the closed top wall (cavity benchmark)
+		ClipAlpha         bool
+		DilatationCorr    bool // apply VOF dilatation correction
+		SplitDivFix       bool // fix split-sweep non-conservation
+		SecondOrderAdvect bool // use QUICK/van Leer for momentum
+		RemoveFlotsam     bool
+		FlotsamThreshold  float64
+		SkipAdvection     bool
+		SkipViscosity     bool
+		ClipRedistribute  bool
+		SubstepMom        int
+		SubstepVOF        int
+		MaxCFLFrac        float64 // if > 0, cap dt so that CFL <= MaxCFLFrac * native CFL limit
 	}
 	TimeScale TimeScaleConvention
 	XStarDef  XStarConvention
 	// CSF surface tension: coefficient kept in Physical.Sigma but the model is
 	// DISABLED (SigmaActive = 0) until everything else passes validation.
 	SigmaActive float64
-	Threads   int
-	DisplayHz int
+	Threads     int
+	DisplayHz   int
 }
 
 func DefaultConfig() Config {
@@ -108,7 +108,7 @@ func DefaultConfig() Config {
 	c.Physical.MuW = 1.0e-3
 	c.Physical.MuA = 1.8e-5
 	c.Physical.Gravity = 9.81
-	c.Physical.		Sigma = 0.072 // kept for later; CSF defaults OFF
+	c.Physical.Sigma = 0.072 // kept for later; CSF defaults OFF
 	c.Physical.DensityRamp.Enabled = false
 	c.Physical.DensityRamp.StartRatio = 100.0
 	c.Physical.DensityRamp.TargetRatio = 998.0 / 1.2
@@ -148,46 +148,46 @@ func DefaultConfig() Config {
 }
 
 type SimState struct {
-	Time       float64
-	Step       int
-	DT         float64
-	CFL        float64
-	Volume     float64
-	VolumeDrift float64
-	FrontX      float64
-	FrontXStar  float64
-	FrontXStar01 float64
-	FrontXStar001 float64
-	ResidualHStar float64
-	TStar       float64
-	PoissonIter int
+	Time            float64
+	Step            int
+	DT              float64
+	CFL             float64
+	Volume          float64
+	VolumeDrift     float64
+	FrontX          float64
+	FrontXStar      float64
+	FrontXStar01    float64
+	FrontXStar001   float64
+	ResidualHStar   float64
+	TStar           float64
+	PoissonIter     int
 	PoissonResidual float64
-	MaxDiv     float64
-	KineticEnergy float64
-	ClippedMass  float64
-	VolSweepX    float64
-	VolSweepY    float64
-	VolClip      float64
-	TopOutflow   float64
-	CFLWarnings  int
-	MaxAdvCFL    float64
-	SumAdvCFL    float64
-	AdvCFLCount  int
+	MaxDiv          float64
+	KineticEnergy   float64
+	ClippedMass     float64
+	VolSweepX       float64
+	VolSweepY       float64
+	VolClip         float64
+	TopOutflow      float64
+	CFLWarnings     int
+	MaxAdvCFL       float64
+	SumAdvCFL       float64
+	AdvCFLCount     int
 	MaxVelInterface float64
-	WeberNumber float64
+	WeberNumber     float64
 }
 
 type ControlCmd struct {
-	Cmd   string
+	Cmd    string
 	Params map[string]float64
 }
 
 type FrameData struct {
-	Nx, Ny       int
-	Time         float64
-	Step         int
-	Alpha        []uint8
-	U            []float32
-	V            []float32
-	Diagnostics  SimState
+	Nx, Ny      int
+	Time        float64
+	Step        int
+	Alpha       []uint8
+	U           []float32
+	V           []float32
+	Diagnostics SimState
 }

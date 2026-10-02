@@ -7,7 +7,7 @@ import (
 
 func TestInterpTSim(t *testing.T) {
 	Z := []float64{1.0, 2.0, 3.0, 5.0}
-	T := []float64{0.5, 1.5, 2.5, 4.5} 
+	T := []float64{0.5, 1.5, 2.5, 4.5}
 
 	if !math.IsNaN(InterpTSim(Z, T, 0.5)) {
 		t.Error("Failed outside lower bound, expected NaN")
@@ -28,7 +28,7 @@ func TestInterpTSim(t *testing.T) {
 
 func TestAlignTime(t *testing.T) {
 	Z := []float64{1.0, 2.0, 3.0, 5.0}
-	T := []float64{0.5, 1.5, 2.5, 4.5} 
+	T := []float64{0.5, 1.5, 2.5, 4.5}
 
 	alignedT := AlignTime(Z, T, 2.0, 3.0)
 
@@ -43,7 +43,7 @@ func TestAlignTime(t *testing.T) {
 func TestTScaleMapping(t *testing.T) {
 	g := 9.81
 	L0 := 0.05715
-	
+
 	// TimeScaleSqrt2gOverL0 (H0 = 2*L0)
 	expectedTStar2 := 1.0 * math.Sqrt(2*g/L0)
 	if math.Abs(expectedTStar2-18.528548) > 1e-3 {
