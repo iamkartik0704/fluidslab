@@ -1,0 +1,105 @@
+/* ============================================================
+   DAMBREAK — base: font-face, reset, typography, grid background
+   ============================================================ */
+
+/* ---- Self-hosted fonts (no CDN; files live in ui/fonts/) ----
+   Drop-in files (jsDelivr fontsource naming):
+     archivo-latin-800-normal.woff2   (display headings)
+     archivo-latin-900-normal.woff2   (extra-heavy display fallback)
+     archivo-latin-400-normal.woff2   (body)
+     space-mono-latin-400-normal.woff2 (labels/readouts)
+     space-mono-latin-700-normal.woff2 (bold mono)
+   Fallbacks are solid system stacks in tokens.css. */
+@font-face {
+  font-family: "Archivo Black";
+  src: url("../fonts/archivo-latin-800-normal.woff2") format("woff2");
+  font-weight: 400 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Archivo";
+  src: url("../fonts/archivo-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Archivo";
+  src: url("../fonts/archivo-latin-800-normal.woff2") format("woff2");
+  font-weight: 700 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Mono";
+  src: url("../fonts/space-mono-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Space Mono";
+  src: url("../fonts/space-mono-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+/* ---- Reset ---- */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+/* ---- Page: cream + blueprint grid ---- */
+body {
+  color: var(--ink);
+  background-color: var(--cream);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 42px 42px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Typography ---- */
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: .95;
+  letter-spacing: -0.035em;
+  margin: 0;
+}
+.page-title { font-size: clamp(40px, 6vw, 96px); }
+.panel-title { font-size: clamp(24px, 2.4vw, 32px); }
+
+/* Eyebrow: mono micro-label */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .22em;
+  color: var(--muted);
+}
+
+/* All numeric readouts: mono, tabular */
+.readout, .kpi__number, .table, .chip, .btn, .select, .tooltip, .statusbar {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Focus: visible everywhere, blue, offset ---- */
+:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 3px;
+}
+
+/* ---- Utility ---- */
+.hidden { display: none !important; }
+
+/* ---- Reduced motion: kill press/hover translations ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

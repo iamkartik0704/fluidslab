@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DAMBREAK — VOF Simulator</title>
+<link rel="stylesheet" href="css/tokens.css?v=10">
+<link rel="stylesheet" href="css/base.css?v=10">
+<link rel="stylesheet" href="css/components.css?v=10">
+<link rel="stylesheet" href="css/layout.css?v=10">
+</head>
+<body>
+<div class="shell">
+
+  <!-- ================= TOPBAR ================= -->
+  <header class="topbar topbar--ink">
+    <div class="topbar__brand">
+      <div class="topbar__logo" aria-hidden="true"></div>
+      <div>
+        <h1 class="topbar__title">DAMBREAK</h1>
+        <div class="topbar__subtitle">VOF · MAC GRID · IC(0)-PCG</div>
+      </div>
+    </div>
+
+    <div class="topbar__kpis">
+      <div class="kpi kpi--yellow">
+        <div class="kpi__label">t*</div>
+        <div class="kpi__number" id="dTStar">–</div>
+      </div>
+      <div class="kpi kpi--orange">
+        <div class="kpi__label">STEP</div>
+        <div class="kpi__number" id="dStep">–</div>
+      </div>
+    </div>
+
+    <div class="topbar__badges">
+      <span id="connState" class="chip chip--orange">CONNECTING…</span>
+      <span id="placeholderBadge" class="chip chip--yellow">PLACEHOLDER DATA</span>
+      <span id="paramWarn" class="chip chip--orange hidden">⚠ OUT OF RANGE</span>
+      <span id="frontWarn" class="chip chip--orange hidden">✖ X* &lt; 1</span>
+      <span id="autoPaused" class="chip chip--yellow hidden">AUTO-PAUSED t*=4</span>
+      <span id="errBadge" class="chip chip--orange hidden"></span>
+    </div>
+
+    <div class="topbar__actions">
+      <button id="deckBtn" class="btn btn--ghost"><span class="btn__icon"></span>DECK</button>
+      <button id="validBtn" class="btn btn--ghost"><span class="btn__icon"></span>VALIDATION</button>
+      <button id="playPauseBtn" class="btn btn--accent"><span class="btn__icon"></span><span id="playPauseText">RUN</span></button>
+      <button id="resetBtn" class="btn btn--ghost"><span class="btn__icon"></span>RESET</button>
+      <button id="stepBtn"  class="btn btn--ghost"><span class="btn__icon"></span>STEP</button>
+    </div>
+  </header>
+
+  <!-- ================= BODY ================= -->
+  <div class="body">
+
+
+
+
+
+      <!-- Centre column: Parameters (left) + sim + validation (right) -->
+      <div class="centre__wrap">
+        <!-- Parameters, unchanged, floated to the left -->
+        <aside class="centre__params" id="centreParams">
+          <div class="sidebar__section">
+            <div class="eyebrow">PARAMETERS</div>
+
+            <label class="slider" for="arSlider">
+              <span class="slider__label"><span>ASPECT RATIO H0/L0</span><span class="slider__value" id="arOut">2.0</span></span>
+              <input type="range" class="slider__input" id="arSlider" min="1" max="4" step="0.1" value="2">
+            </label>
+
+            <label class="slider" for="cellsSlider">
+              <span class="slider__label"><span>CELLS PER L0</span><span class="slider__value" id="cellsOut">16</span></span>
+              <input type="range" class="slider__input" id="cellsSlider" min="8" max="32" step="8" value="16">
+            </label>
+
+            <label class="slider" for="viscSlider">
+              <span class="slider__label"><span>VISCOSITY SCALE</span><span class="slider__value" id="viscOut">1.0</span></span>
+              <input type="range" class="slider__input" id="viscSlider" min="-2" max="3" step="0.25" value="0">
+            </label>
+
+            <label class="slider" for="densSlider">
+              <span class="slider__label"><span>DENSITY RATIO ρW/ρA</span><span class="slider__value" id="densOut">832</span></span>
+              <input type="range" class="slider__input" id="densSlider" min="1" max="2000" step="1" value="832">
+            </label>
+          </div>
+
+          <hr class="sidebar__divider">
+
+          <div class="sidebar__section">
+            <div class="eyebrow">SOLVER OPTIONS</div>
+
+            <label class="param">
+              <span class="eyebrow">ADVECTION SCHEME</span>
+              <select id="schemeSelect" class="select">
+                <option value="first-order">FIRST-ORDER (UPWIND)</option>
+                <option value="donor-acceptor" selected>DONOR-ACCEPTOR</option>
+                <option value="van leer">VAN LEER MOMENTUM</option>
+              </select>
+            </label>
+
+            <label class="param">
+              <span class="eyebrow">TIME SCALING</span>
+              <select id="timeScaleSelect" class="select">
+                <option value="sqrt(2g/L0)" selected>√(2g/L0)</option>
+                <option value="sqrt(g/L0)">√(g/L0)</option>
+              </select>
+            </label>
+
+            <label class="toggle toggle--disabled" id="freeSlipRow" title="temporarily disabled (under investigation)">
+              <input type="checkbox" id="freeSlipToggle" disabled>
+              <span>FREE-SLIP WALLS — TEMPORARILY DISABLED (UNDER INVESTIGATION)</span>
+            </label>
+
+            <label class="toggle">
+              <input type="checkbox" id="overlayToggle">
+              <span>VELOCITY OVERLAY</span>
+            </label>
+          </div>
+
+          <hr class="sidebar__divider">
+
+          <div class="sidebar__section">
+            <div class="eyebrow">SLOW-MOTION FACTOR</div>
+            <div class="table" id="slowRow" style="font-size:14px">–</div>
+            <p class="eyebrow" style="letter-spacing:.05em">CHANGES THAT NEED RE-INITIALISATION TRIGGER A CLEAN RESET.</p>
+          </div>
+        </aside>
+
+        <div class="centre__body">
+          <!-- Sim canvas (top of centre column) -->
+          <section class="panel main__sim">
+            <div class="panel__head">
+              <div>
+                <div class="eyebrow">FIELD VIEW · α = WATER OVER AIR</div>
+                <h2 class="panel__title">SIMULATION</h2>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <label class="eyebrow" for="frontDefSelect">FRONT DEFINITION</label>
+                <select id="frontDefSelect" class="select" style="width:auto">
+                  <option value="0.5" selected>0.5 CROSSING</option>
+                  <option value="0.99">99% CUMULATIVE</option>
+                </select>
+              </div>
+            </div>
+            <div class="canvas-wrap" id="canvasWrap">
+              <canvas id="fieldCanvas"></canvas>
+              <div class="hud hud--tl">
+                <span class="chip chip--black" id="hudTime">t = –</span>
+                <span class="chip chip--black" id="hudStep">STEP –</span>
+              </div>
+              <div class="hud hud--tr">
+                <span class="chip chip--yellow" id="hudGrid">–</span>
+                <span class="chip chip--black" id="hudFps">FPS –</span>
+              </div>
+              <div class="hud hud--bl">
+                <span class="chip chip--blue" id="frontDefLabel">FRONT: α = 0.5</span>
+              </div>
+              <div class="tooltip tooltip--hidden" id="fieldTip"></div>
+            </div>
+            <p class="eyebrow" style="margin-top:10px;letter-spacing:.05em">
+              INITIAL COLUMN OUTLINED · YELLOW MARKER = SOLVER-REPORTED FRONT (α = 0.5 CROSSING) · NO CLAIM OF PHYSICAL ACCURACY
+            </p>
+          </section>
+
+          <!-- Validation panel directly beneath the simulation -->
+          <section class="panel">
+            <div class="panel__head">
+              <div>
+                <div class="eyebrow">VALIDATION</div>
+                <h2 class="panel__title">X* VS T*</h2>
+              </div>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="plotCanvas"></canvas>
+              <div class="tooltip tooltip--hidden" id="plotTip"></div>
+            </div>
+            <div class="chart-legend" id="plotLegend"></div>
+            <p class="eyebrow" id="plotTimeScale" style="margin-top:10px"></p>
+          </section>
+        </div>
+      </div>
+
+      <!-- Right column: Diagnostics + About only -->
+      <aside class="right__col">
+        <section class="panel">
+          <div class="panel__head">
+            <div>
+              <div class="eyebrow">DIAGNOSTICS</div>
+              <h2 class="panel__title">READOUT</h2>
+            </div>
+          </div>
+          <table class="table">
+            <tbody>
+              <tr><th>SIM TIME</th><td id="dTime">–</td></tr>
+              <tr><th>dt</th><td id="dDT">–</td></tr>
+              <tr><th>CFL</th><td id="dCFL">–</td></tr>
+              <tr><th>VOLUME DRIFT %</th><td id="dDrift">–</td></tr>
+              <tr><th>MAX DIVERGENCE</th><td id="dMaxDiv">–</td></tr>
+              <tr><th>POISSON ITERATIONS</th><td id="dPois">–</td></tr>
+              <tr><th>SLOW-MOTION FACTOR</th><td id="dSlow">–</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="panel panel--cream">
+          <div class="panel__head">
+            <div>
+              <div class="eyebrow">METHOD · LIMITATIONS · FRONT</div>
+              <h2 class="panel__title">ABOUT</h2>
+            </div>
+          </div>
+          <p><strong>Method.</strong> Volume-of-fluid two-phase incompressible flow on a MAC grid: donor–acceptor VOF advection (Hirt &amp; Nichols 1981), first-order upwind momentum advection, projection method (Chorin), IC(0)-preconditioned conjugate gradient for the pressure Poisson equation, explicit Euler time integration.</p>
+          <p><strong>Known limitations.</strong> Two-dimensional only. First-order interface and momentum advection: strongly diffusive. No surface tension (CSF coefficient reserved but disabled). Open top boundary. Runs auto-pause at t* = 4.0 (validated window).</p>
+          <p><strong>Front position.</strong> The marker shows the solver's reported front: sub-cell interpolation of the α = 0.5 crossing in the bottom cell row. The alternative "99% cumulative" definition reports the x where cumulative fluid area to the left reaches 99% of total fluid area. Both curves are drawn; the plot states which is selected.</p>
+          <p class="eyebrow" style="letter-spacing:.05em">RESEARCH/TEACHING TOOL — THIS UI MAKES NO CLAIM OF PHYSICAL ACCURACY.</p>
+        </section>
+      </aside>
+  </div> <!-- closes .body -->
+
+  <!-- ================= FOOTER ================= -->
+
+  <div class="footer">
+    <div class="statusbar">
+      <span class="statusbar__item" id="sbWs"><span class="statusbar__icon" data-icon="wifi"></span><span id="sbWsText">WS –</span></span>
+      <span class="statusbar__item" id="sbFps"><span class="statusbar__icon" data-icon="gauge"></span><span id="sbFpsText">FPS –</span></span>
+      <span class="statusbar__item"><span class="statusbar__icon" data-icon="layers"></span>FRAME v1 · DBRK</span>
+      <span class="statusbar__item" style="margin-left:auto">ONE SHARED SIMULATION · MULTIPLE TABS ALLOWED</span>
+    </div>
+  </div>
+</div>
+
+<!-- ================= MODALS ================= -->
+<div id="modalOverlay" class="modal-overlay hidden">
+  <div class="modal">
+    <button id="modalClose" class="btn btn--ghost modal__close">✖ CLOSE</button>
+    <div id="modalHeader" class="modal__header">
+      <h2 id="modalTitle">TITLE</h2>
+      <div id="modalActions" class="modal__actions"></div>
+    </div>
+    <div id="modalContent" class="modal__body"></div>
+  </div>
+</div>
+
+<script type="module" src="js/main.js?v=9"></script>
+</body>
+</html>

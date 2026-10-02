@@ -1,0 +1,33 @@
+/* ============================================================
+   DAMBREAK — design tokens (variables ONLY, no rules here)
+   Neo-brutalism × scientific instrument console
+   ============================================================ */
+
+:root {
+  /* Palette */
+  --ink:    #0A0A0A;
+  --paper:  #FFFFFF;
+  --cream:  #F1EEE5;
+  --yellow: #FFD600;
+  --blue:   #2B4BFF;
+  --orange: #FF4A1C;
+  --green:  #0BA878;
+  --fill:   #D9DDFB;          /* chart area fill */
+  --grid:   rgba(0, 0, 0, .06);
+  --muted:  #555555;
+
+  /* Border + shadow system (zero blur, always) */
+  --bw: 3px;
+  --bw-thin: 2px;
+  --shadow-s: 4px 4px 0 var(--ink);
+  --shadow:   6px 6px 0 var(--ink);
+  --shadow-l: 10px 10px 0 var(--ink);
+
+  /* Type */
+  --font-display: "Archivo Black", "Archivo", system-ui, sans-serif;
+  --font-body:    "Archivo", system-ui, sans-serif;
+  --font-mono:    "Space Mono", ui-monospace, Consolas, monospace;
+
+  /* Motion */
+  --press: 90ms linear;       /* button press translate */
+}

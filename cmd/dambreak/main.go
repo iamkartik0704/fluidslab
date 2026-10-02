@@ -3,19 +3,23 @@ package main
 import (
 	"flag"
 	"fmt"
+	"net"
 	"os"
 	"runtime"
 	"runtime/pprof"
 	"time"
 
+	"dambreak/internal/server"
 	"dambreak/internal/solver"
 )
 
 func main() {
+	mode := flag.String("mode", "dambreak", "serve | dambreak | single | cavity")
+	port := flag.Int("port", 8080, "TCP port (0 = first free port)")
+	noBrowser := flag.Bool("no-browser", true, "do not auto-open the browser")
 	nx := flag.Int("nx", 128, "interior cells in x")
 	ny := flag.Int("ny", 192, "interior cells in y")
 	steps := flag.Int("steps", 500, "number of timesteps")
-	mode := flag.String("mode", "dambreak", "dambreak | single | cavity")
 	freeSlip := flag.Bool("freeslip", false, "enable freeslip")
 	halfRes := flag.Bool("halfres", false, "run at half resolution")
 	cavityN := flag.Int("cavityN", 65, "cavity grid per side")
@@ -36,6 +40,10 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
+	if *mode == "serve" {
+		runServe(*port, *noBrowser)
+		return
+	}
 	if *mode == "cavity" {
 		runCavityCLI(*cavityN, *cavityT, *outHz)
 		return
@@ -81,6 +89,35 @@ func main() {
 	st := &s.State
 	fmt.Printf("final: t=%.4f step=%d maxDiv=%.2e poisson=%d res=%.1e\n",
 		st.Time, st.Step, st.MaxDiv, st.PoissonIter, st.PoissonResidual)
+}
+
+// runServe starts the UI server on the given port and blocks.
+func runServe(port int, noBrowser bool) {
+	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "listen:", err)
+		os.Exit(1)
+	}
+	url := fmt.Sprintf("http://127.0.0.1:%d/", ln.Addr().(*net.TCPAddr).Port)
+
+	r := server.NewRunner(server.DefaultParams())
+	h, err := server.NewHub(r)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "hub:", err)
+		os.Exit(1)
+	}
+
+	stop := make(chan struct{})
+	go h.Run(stop)
+
+	fmt.Printf("dam break UI: %s\n", url)
+	if !noBrowser {
+		server.OpenBrowser(url)
+	}
+	if err := h.Serve(ln); err != nil {
+		fmt.Fprintln(os.Stderr, "serve:", err)
+		os.Exit(1)
+	}
 }
 
 // runCavityCLI runs the lid-driven cavity benchmark headless and prints the
@@ -203,12 +240,12 @@ func runDambreakCLI(nx, ny int, tMax float64, outHz int, freeSlip bool, prefix s
 			fmt.Println("STOP:", err)
 			break
 		}
-		
+
 		totalPoissonIters += s.State.PoissonIter
 		if s.State.PoissonIter > maxPoissonIters {
 			maxPoissonIters = s.State.PoissonIter
 		}
-		
+
 		printState()
 
 		if nextTargetIdx < len(targets) && s.State.TStar >= targets[nextTargetIdx] {
@@ -227,7 +264,7 @@ func runDambreakCLI(nx, ny int, tMax float64, outHz int, freeSlip bool, prefix s
 				st.TStar, st.Step, st.FrontXStar, volDriftPct)
 		}
 	}
-	
+
 	wallTime := time.Since(startWall)
 	meanPoissonIters := float64(totalPoissonIters) / float64(s.State.Step)
 	fmt.Printf("Dam break completed in %v\n", wallTime)

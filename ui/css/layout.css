@@ -1,0 +1,185 @@
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: var(--paper);
+  border-bottom: var(--bw) solid var(--ink);
+  flex-wrap: wrap;
+}
+.topbar--ink {
+  background: var(--ink);
+  color: var(--cream);
+}
+.topbar__brand { display: flex; align-items: center; gap: 12px; }
+.topbar__title { font-size: 24px; font-family: var(--font-display); line-height: 1; margin: 0; }
+.topbar__subtitle { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: var(--muted); }
+.topbar--ink .topbar__subtitle { color: rgba(255, 255, 255, 0.7); }
+.topbar__kpis { display: flex; gap: 12px; flex-wrap: wrap; align-items: stretch; }
+.topbar__badges { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+#connState { display: none !important; }
+.topbar__actions { display: flex; gap: 10px; margin-left: auto; flex-wrap: nowrap; }
+
+
+/* ---- Body: main content + right diagnostics column ---- */
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 20px;
+  padding: 20px;
+  flex: 1;
+  align-items: start;
+}
+
+/* ---- Three-column desktop (>= 1000px) ---- */
+.body--cols {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr) 280px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ---- Main grid (fallback / standalone) ---- */
+.main { display: grid; grid-template-columns: 1fr; gap: 20px; min-width: 0; }
+.main__sim { min-width: 0; grid-column: 1 / -1; }
+.main__sub { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+/* ---- Centre wrap: params (left) + sim/validation (right) ---- */
+.centre__wrap {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+
+/* ---- Parameters (left column inside centre__wrap) ---- */
+.centre__params {
+  min-width: 0;
+  position: sticky;
+  top: 24px;
+  border: var(--bw) solid var(--ink);
+  background: var(--paper);
+  box-shadow: var(--shadow-l);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.centre__params__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: var(--bw) solid var(--ink);
+  padding-bottom: 10px;
+}
+.centre__params__head h2 { margin: 6px 0 0 0; }
+.centre__params__head .eyebrow { margin-bottom: 0; }
+
+/* ---- Centre column: sim + validation ---- */
+.centre__body {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.centre__body__sim {
+  min-width: 0;
+}
+.centre__body__val {
+  min-width: 0;
+}
+
+/* ---- Right column: diagnostics + about ---- */
+.right__col {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 24px;
+  min-width: 0;
+}
+.right__col__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: var(--bw) solid var(--ink);
+  padding-bottom: 10px;
+}
+
+/* ---- Canvas panel ---- */
+.canvas-wrap {
+  position: relative;
+  border: var(--bw) solid var(--ink);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  min-width: 0;
+  max-height: 520px;
+  overflow: hidden;
+}
+.canvas-wrap canvas { display: block; width: 100%; height: 100%; }
+
+/* HUD chips over the sim canvas */
+.hud {
+  position: absolute;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  pointer-events: none;
+}
+.hud--tl { top: 10px; left: 10px; }
+.hud--tr { top: 10px; right: 10px; }
+.hud--bl { bottom: 10px; left: 10px; }
+.hud .chip { box-shadow: 3px 3px 0 var(--ink); }
+
+/* Chart canvases keep their own aspect via CSS width; height set in JS. */
+.chart-wrap { position: relative; }
+.chart-wrap canvas { display: block; width: 100%; height: 220px; }
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 10px;
+}
+.chart-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: var(--bw) solid var(--ink);
+  background: var(--paper);
+  box-shadow: var(--shadow);
+  font: 700 13px/1.1 Archivo, sans-serif;
+  letter-spacing: .05em;
+  white-space: nowrap;
+  user-select: none;
+}
+.chart-legend__item .dot {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+.chart-legend__item .dash {
+  width: 32px;
+  height: 2px;
+  border-top: 1.5px dashed var(--ink);
+  flex: 0 0 auto;
+}
+
+/* ---- Footer statusbar ---- */
+.footer { padding: 0 24px 24px; }
+
+/* ---- Desktop: no collapse button (always expanded here) ---- */
+.sidebar__collapse-btn { display: none; }
+
+/* ---- Responsive ---- */
+@media (max-width: 999px) {
+  .body { grid-template-columns: 1fr; }
+  .centre__wrap { grid-template-columns: 1fr; }
+  .canvas-wrap { height: 420px; }
+  .footer { padding: 0 16px 16px; }
+  .body, .footer { padding: 16px; }
+}

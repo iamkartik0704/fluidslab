@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fluids Lab</title>
+    <style>
+        body { margin: 0; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: #0f172a; color: #f8fafc; }
+        .container { display: flex; gap: 20px; max-width: 1400px; margin: 0 auto; height: 90vh; }
+        .center-col { flex: 3; display: flex; flex-direction: column; gap: 20px; }
+        .right-col { flex: 1; display: flex; flex-direction: column; gap: 20px; background: #1e293b; padding: 20px; border-radius: 8px; }
+        .panel { background: #1e293b; padding: 20px; border-radius: 8px; flex: 1; display: flex; flex-direction: column; }
+        canvas { background: #0f172a; border: 1px solid #334155; border-radius: 4px; }
+        #sim-canvas { width: 100%; object-fit: contain; flex: 1; }
+        #val-canvas { width: 100%; flex: 1; }
+        h2 { margin-top: 0; font-size: 1.2rem; color: #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
+        .badge { background: #3b82f6; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem; }
+        .stat { display: flex; justify-content: space-between; margin-bottom: 10px; border-bottom: 1px solid #334155; padding-bottom: 5px; }
+        button { background: #3b82f6; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #2563eb; }
+        .control-group { margin-bottom: 20px; }
+        label { display: flex; align-items: center; gap: 8px; cursor: pointer; margin-top: 10px; }
+        .info-text { font-size: 0.9rem; color: #94a3b8; line-height: 1.5; }
+    </style>
+    <script src="wasm_exec.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="center-col">
+            <div class="panel">
+                <h2>Simulation <span class="badge">PLACEHOLDER</span></h2>
+                <canvas id="sim-canvas"></canvas>
+            </div>
+            <div class="panel">
+                <h2>Validation Plot</h2>
+                <canvas id="val-canvas"></canvas>
+            </div>
+        </div>
+        <div class="right-col">
+            <h2>Diagnostics</h2>
+            <div class="stat"><span>Time (T)</span> <span id="stat-time">0.000</span></div>
+            <div class="stat"><span>Z Front</span> <span id="stat-z">1.000</span></div>
+            <div class="stat"><span>CFL</span> <span id="stat-cfl">0.000</span></div>
+            <div class="stat"><span>dt</span> <span id="stat-dt">0.000</span></div>
+            <div class="stat"><span>Step</span> <span id="stat-step">0</span></div>
+            <div class="stat" style="color:#3b82f6; font-weight:bold;"><span>RMS (Z 1.44-7)</span> <span id="stat-rms">0.0%</span></div>
+            
+            <div class="control-group">
+                <button id="btn-start" onclick="toggleSim()">Start</button>
+                <button onclick="initSim()">Reset</button>
+                <label>
+                    <input type="checkbox" id="align-time" onchange="updateChart()"> Align time at Z=1.44
+                </label>
+                <label>
+                    <input type="checkbox" id="auto-pause"> Auto-pause at T=12
+                </label>
+            </div>
+            
+            <h2>About</h2>
+            <p class="info-text">
+                Defaults: 15L0 x 4L0 domain, 16 cells/L0, van Leer, free-slip enabled.<br><br>
+                Agreement within ~4% to Z=7, ~9% slow at Z=14, not converged in space or time.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+            initSim();
+        });
+
+        const simCanvas = document.getElementById("sim-canvas");
+        const simCtx = simCanvas.getContext("2d");
+        let chart = null;
+        let simData = { Z: [], T: [] };
+
+        // Martin & Moyce Data (Mean)
+        const exp225_Z = [1.11, 1.22, 1.44, 1.67, 1.89, 2.11, 2.33, 2.56, 2.78, 3.0, 3.22, 3.44, 3.67, 3.89, 4.11, 5.0, 5.89, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0];
+        const exp225_T = [0.41, 0.84, 1.19, 1.43, 1.63, 1.83, 1.98, 2.2, 2.32, 2.51, 2.65, 2.83, 2.97, 3.11, 3.33, 4.02, 4.44, 5.09, 5.69, 6.3, 6.83, 7.44, 8.08, 8.67, 9.31];
+        
+        const exp1125_Z = [1.22, 1.44, 1.89, 2.33, 2.78, 3.22, 3.67, 4.11, 4.56, 5.0, 5.44, 5.89, 6.33, 6.76];
+        const exp1125_T = [0.82, 1.19, 1.58, 1.91, 2.23, 2.58, 2.91, 3.26, 3.6, 3.92, 4.26, 4.61, 4.95, 5.32];
+
+        // M&M Min/Max envelopes (approximate from data)
+        const env_Z = exp225_Z;
+        const env_min = exp225_T.map(t => t * 0.95);
+        const env_max = exp225_T.map(t => t * 1.05);
+
+        function initChart() {
+            const ctx = document.getElementById('val-canvas').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Sim (Live)',
+                            data: [],
+                            borderColor: '#3b82f6',
+                            tension: 0.1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'M&M a=2.25" Mean',
+                            data: exp225_Z.map((z, i) => ({x: z, y: exp225_T[i]})),
+                            borderColor: 'black',
+                            backgroundColor: 'black',
+                            showLine: false,
+                            pointStyle: 'rect',
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'M&M a=1.125" Thin',
+                            data: exp1125_Z.map((z, i) => ({x: z, y: exp1125_T[i]})),
+                            borderColor: 'rgba(255, 255, 255, 0.4)',
+                            borderWidth: 1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'Min Band',
+                            data: env_Z.map((z, i) => ({x: z, y: env_min[i]})),
+                            borderColor: 'transparent',
+                            backgroundColor: 'rgba(100, 100, 100, 0.2)',
+                            pointRadius: 0,
+                            fill: '+1'
+                        },
+                        {
+                            label: 'Max Band',
+                            data: env_Z.map((z, i) => ({x: z, y: env_max[i]})),
+                            borderColor: 'transparent',
+                            pointRadius: 0,
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        x: { type: 'linear', title: { display: true, text: 'Z = z/a' } },
+                        y: { title: { display: true, text: 'T = t*sqrt(2g/a)' } }
+                    }
+                }
+            });
+        }
+
+        initChart();
+
+        function toggleSim() {
+            const btn = document.getElementById("btn-start");
+            if (btn.innerText === "Start") {
+                btn.innerText = "Pause";
+                setRunning(true);
+                requestAnimationFrame(loop);
+            } else {
+                btn.innerText = "Start";
+                setRunning(false);
+            }
+        }
+
+        function loop() {
+            stepSim();
+            const stats = getStats();
+            if (stats) {
+                if (stats.tStar >= 12.0 && document.getElementById("auto-pause").checked) {
+                    toggleSim();
+                } else {
+                    const btn = document.getElementById("btn-start");
+                    if (btn.innerText === "Pause") {
+                        requestAnimationFrame(loop);
+                    }
+                }
+            }
+        }
+
+        function updateChart() {
+            const align = document.getElementById("align-time").checked;
+            let offset = 0;
+            if (align && simData.Z.length > 0) {
+                // Find T at Z=1.44
+                for (let i = 0; i < simData.Z.length; i++) {
+                    if (simData.Z[i] >= 1.44) {
+                        offset = 1.19 - simData.T[i];
+                        break;
+                    }
+                }
+            }
+
+            const shiftedData = simData.Z.map((z, i) => ({x: z, y: simData.T[i] + offset}));
+            chart.data.datasets[0].data = shiftedData;
+            chart.update();
+
+            // Calculate RMS [1.44, 7]
+            if (simData.Z.length > 0 && shiftedData.length > 0) {
+                let sumSq = 0;
+                let count = 0;
+                for (let i = 0; i < exp225_Z.length; i++) {
+                    let ez = exp225_Z[i];
+                    if (ez >= 1.44 && ez <= 7.0) {
+                        let et = exp225_T[i];
+                        // Interpolate shiftedData
+                        let st = 0;
+                        for (let j = 0; j < shiftedData.length-1; j++) {
+                            if (shiftedData[j].x <= ez && shiftedData[j+1].x >= ez) {
+                                let t = (ez - shiftedData[j].x) / (shiftedData[j+1].x - shiftedData[j].x);
+                                st = shiftedData[j].y + t * (shiftedData[j+1].y - shiftedData[j].y);
+                                break;
+                            }
+                        }
+                        if (st > 0) {
+                            let diff = (st - et) / et;
+                            sumSq += diff * diff;
+                            count++;
+                        }
+                    }
+                }
+                if (count > 0) {
+                    let rms = Math.sqrt(sumSq / count) * 100;
+                    document.getElementById("stat-rms").innerText = rms.toFixed(1) + "%";
+                }
+            }
+        }
+
+        function updateUIFromGo() {
+            const w = getGridWidth();
+            const h = getGridHeight();
+            if (w > 0 && h > 0) {
+                if (simCanvas.width !== w || simCanvas.height !== h) {
+                    simCanvas.width = w;
+                    simCanvas.height = h;
+                }
+                
+                const alphaArr = getAlphaArray();
+                const imgData = simCtx.createImageData(w, h);
+                for (let i = 0; i < w * h; i++) {
+                    const a = alphaArr[i];
+                    imgData.data[i*4] = 59;     // R
+                    imgData.data[i*4+1] = 130;  // G
+                    imgData.data[i*4+2] = 246;  // B
+                    imgData.data[i*4+3] = a;    // A
+                }
+                simCtx.putImageData(imgData, 0, 0);
+            }
+
+            const stats = getStats();
+            if (stats) {
+                document.getElementById("stat-time").innerText = stats.tStar.toFixed(3);
+                document.getElementById("stat-z").innerText = stats.zStar.toFixed(3);
+                document.getElementById("stat-cfl").innerText = stats.cfl.toFixed(3);
+                document.getElementById("stat-dt").innerText = stats.dt.toExponential(3);
+                document.getElementById("stat-step").innerText = stats.step;
+                
+                // Only push if Z changed significantly
+                if (simData.Z.length === 0 || stats.zStar > simData.Z[simData.Z.length-1] + 0.01) {
+                    simData.Z.push(stats.zStar);
+                    simData.T.push(stats.tStar);
+                    updateChart();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

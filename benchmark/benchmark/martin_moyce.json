@@ -1,0 +1,19 @@
+{
+  "entries": [
+    {
+      "id": "martin_moyce_1952",
+      "citation": "Martin, J.C. & Moyce, W.J. (1952), Phil. Trans. R. Soc. A 244, experiment 1",
+      "description": "Column collapse, aspect ratio H0/L0 = 2, measured front position vs time",
+      "verified": false,
+      "note": "PLACEHOLDER values: digitised coordinates NOT yet supplied by the user; do not compare against these numbers.",
+      "timeScale": "sqrt(2g/L0)",
+      "points": [
+        { "t": 0.0, "x": 1.0 },
+        { "t": 1.0, "x": 1.6 },
+        { "t": 2.0, "x": 2.1 },
+        { "t": 3.0, "x": 2.6 },
+        { "t": 4.0, "x": 3.0 }
+      ]
+    }
+  ]
+}
