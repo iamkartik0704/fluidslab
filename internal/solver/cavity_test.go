@@ -206,3 +206,30 @@ func TestCavityFine65(t *testing.T) {
 		st.Time, st.Step, st.MaxDiv, maxErr, maxErrLoc)
 }
 
+// TestCavityFullConvergence prints Ghia error and observed convergence order
+// for FirstOrder and VanLeer at 17, 33, 65.
+func TestCavityFullConvergence(t *testing.T) {
+	for _, scheme := range []struct {
+		name string
+		so   bool
+	}{
+		{"FirstOrder", false},
+		{"VanLeer", true},
+	} {
+		t.Logf("=== %s ===", scheme.name)
+		var prevErr float64
+		var prevN int
+		for _, n := range []int{17, 33, 65} {
+			g, f, st := runCavity(n, 30.0, t, scheme.so)
+			maxErr := ghiaComparisonError(g, f, t)
+			t.Logf("  %s n=%d: maxErr=%.4f steps=%d maxDiv=%.2e", scheme.name, n, maxErr, st.Step, st.MaxDiv)
+			if prevErr > 0 {
+				order := math.Log(prevErr/maxErr) / math.Log(float64(n)/float64(prevN))
+				t.Logf("    observed order (%d->%d) = %.2f", prevN, n, order)
+			}
+			prevErr = maxErr
+			prevN = n
+		}
+	}
+}
+
