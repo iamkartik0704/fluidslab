@@ -34,7 +34,7 @@ func cavityCfg() Config {
 	cfg.Numerical.OpenTop = false
 	cfg.Numerical.LidVelocity = 1.0
 	cfg.Physical.Gravity = 0
-	cfg.Numerical.CFL = 0.4
+	cfg.Numerical.CFL = 0.2
 	cfg.Numerical.MaxDT = 1.0
 	cfg.Numerical.PoissonTol = 1e-9
 	cfg.Physical.RhoW, cfg.Physical.MuW = 1.0, 0.01 // Re = rho*U*L/mu = 100
