@@ -1,7 +1,7 @@
 # Dam Break 2D VOF Solver
 
-## Reproducibility Map: Tables to Scripts
-Every major diagnostic table or result reported can be exactly reproduced by running the corresponding scripts tracked in the tree.
+## Scripts Map
+Every major diagnostic table or result reported can be executed using the corresponding scripts tracked in the tree.
 
 | Report Result / Table | Script / Driver Path |
 | :--- | :--- |
@@ -15,7 +15,7 @@ Every major diagnostic table or result reported can be exactly reproduced by run
 | **Volume Drift / Conservation Verification** | `cmd/driftdiag/main.go` |
 
 ## Unexplained / Outstanding Anomalies
-The codebase is numerically frozen. However, the following observations remain open for future mathematical alignment:
+The following observations remain open for future mathematical alignment:
 
 1. **Late-Stage Divergence:** Even with aligned time normalization, the $N=32$ simulation lags the experimental benchmark after $Z=5.0$, reaching $Z=14.0$ substantially slower than Martin & Moyce's water columns.
 2. **Inviscid Theoretical Limit:** The numerical terminal speed for $N=32 \ dt/4$ between $Z=10$ and $Z=14$ is $1.46 L_0 / t^*$. Using the $t^* = t \sqrt{2g / L_0}$ conversion, the inviscid theoretical limit is $2.0 L_0 / t^*$. The simulation thus travels at $73\%$ of the inviscid bound.

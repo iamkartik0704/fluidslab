@@ -59,7 +59,8 @@ type RunResult struct {
 	T_sim []float64
 	Z_01  []float64
 	Z_001 []float64
-	CFLMax float64
+	MaxAdvCFL float64
+	MeanAdvCFL float64
 }
 
 func getGitInfo() (string, bool) {
@@ -179,9 +180,7 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 			}
 		}
 
-		if sim.State.CFL > res.CFLMax {
-			res.CFLMax = sim.State.CFL
-		}
+
 
 		if sim.State.FrontXStar >= 14.0 || t_star >= 12.0 {
 			break
@@ -193,8 +192,12 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 	res.MaxVolDrift = maxVolDrift
 	res.Warnings = sim.State.CFLWarnings
 	res.MeanPoissonIter = float64(sumIter) / float64(countIter)
+	res.MaxAdvCFL = sim.State.MaxAdvCFL
+	if sim.State.AdvCFLCount > 0 {
+		res.MeanAdvCFL = sim.State.SumAdvCFL / float64(sim.State.AdvCFLCount)
+	}
 	
-	fmt.Printf("Finished %s in %v\n", name, res.WallTime)
+	fmt.Printf("Finished %s in %v (MaxCFL: %.4f, MeanCFL: %.4f)\n", name, res.WallTime, res.MaxAdvCFL, res.MeanAdvCFL)
 	return res
 }
 

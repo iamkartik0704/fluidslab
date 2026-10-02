@@ -1,4 +1,4 @@
-# commit=a72ca67126abbcfff84df84c49ffa7d47864ca48 dirty=true domain=15L0x4L0 cellsPerL0=16 advection=VanLeer wall=FreeSlip density_ratio=1000.0 t*=t_sqrt(2g/L0)
+# commit=0faaedfc8fea22ac07e9fd2e274c7b1b167d9c16 dirty=true domain=15L0x4L0 cellsPerL0=16 advection=VanLeer wall=FreeSlip density_ratio=1000.0 t*=t_sqrt(2g/L0)
 t_star,X_star_05,X_star_01,X_star_001
 0.00463,1.00001,1.02502,1.03065
 0.00926,1.00004,1.02507,1.03070

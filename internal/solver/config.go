@@ -170,6 +170,9 @@ type SimState struct {
 	VolClip      float64
 	TopOutflow   float64
 	CFLWarnings  int
+	MaxAdvCFL    float64
+	SumAdvCFL    float64
+	AdvCFLCount  int
 	MaxVelInterface float64
 	WeberNumber float64
 }

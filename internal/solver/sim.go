@@ -56,6 +56,15 @@ func (s *Simulation) Step(dtIn float64) error {
 		dt = ComputeDt(g, f, cfg, &s.State)
 	}
 
+	hmin := math.Min(g.Dx, g.Dy)
+	umax := f.MaxAbsVel(g)
+	if umax > 0 {
+		advCFL := umax * dt / hmin
+		s.State.MaxAdvCFL = math.Max(s.State.MaxAdvCFL, advCFL)
+		s.State.SumAdvCFL += advCFL
+		s.State.AdvCFLCount++
+	}
+
 	nMom := cfg.Numerical.SubstepMom
 	if nMom <= 0 { nMom = 1 }
 	nVOF := cfg.Numerical.SubstepVOF
