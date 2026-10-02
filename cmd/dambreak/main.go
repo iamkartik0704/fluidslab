@@ -16,6 +16,12 @@ import (
 func main() {
 	mode := flag.String("mode", "dambreak", "serve | dambreak | single | cavity")
 	port := flag.Int("port", 8080, "TCP port (0 = first free port)")
+	
+	// If PORT environment variable is set (e.g. by Render/Fly.io), override the flag default
+	if envPort := os.Getenv("PORT"); envPort != "" {
+		fmt.Sscanf(envPort, "%d", port)
+	}
+	
 	noBrowser := flag.Bool("no-browser", true, "do not auto-open the browser")
 	nx := flag.Int("nx", 128, "interior cells in x")
 	ny := flag.Int("ny", 192, "interior cells in y")
@@ -93,12 +99,12 @@ func main() {
 
 // runServe starts the UI server on the given port and blocks.
 func runServe(port int, noBrowser bool) {
-	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", port))
+	ln, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", port))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "listen:", err)
 		os.Exit(1)
 	}
-	url := fmt.Sprintf("http://127.0.0.1:%d/", ln.Addr().(*net.TCPAddr).Port)
+	url := fmt.Sprintf("http://localhost:%d/", ln.Addr().(*net.TCPAddr).Port)
 
 	r := server.NewRunner(server.DefaultParams())
 	h, err := server.NewHub(r)
