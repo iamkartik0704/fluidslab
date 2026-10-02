@@ -18,9 +18,21 @@ func ComputeDt(g *Grid, f *Fields, cfg *Config, state *SimState) float64 {
 	hmin := math.Min(g.Dx, g.Dy)
 	umax := f.MaxAbsVel(g)
 
-	dtAdv := cfg.Numerical.MaxDT
+	// Effective CFL coefficients (allow capping via MaxCFLFrac)
+	cflAdv := cfg.Numerical.CFL
+	cflVisc := cfg.Numerical.ViscousCFL
+	cflGrav := cfg.Numerical.GravityCFL
+	maxDT := cfg.Numerical.MaxDT
+	if cfg.Numerical.MaxCFLFrac > 0 && cfg.Numerical.MaxCFLFrac < 1.0 {
+		cflAdv *= cfg.Numerical.MaxCFLFrac
+		cflVisc *= cfg.Numerical.MaxCFLFrac
+		cflGrav *= cfg.Numerical.MaxCFLFrac
+		maxDT *= cfg.Numerical.MaxCFLFrac
+	}
+
+	dtAdv := maxDT
 	if umax > 0 {
-		dtAdv = cfg.Numerical.CFL * hmin / umax
+		dtAdv = cflAdv * hmin / umax
 	}
 
 	// Viscous limit: use the worst (largest) kinematic viscosity among cells
@@ -36,12 +48,12 @@ func ComputeDt(g *Grid, f *Fields, cfg *Config, state *SimState) float64 {
 			}
 		}
 	}
-	dtVisc := cfg.Numerical.MaxDT
+	dtVisc := maxDT
 	if nuMax > 0 {
-		dtVisc = cfg.Numerical.ViscousCFL * hmin * hmin / nuMax
+		dtVisc = cflVisc * hmin * hmin / nuMax
 	}
 
-	dtGrav := cfg.Numerical.GravityCFL * math.Sqrt(hmin/cfg.Physical.Gravity)
+	dtGrav := cflGrav * math.Sqrt(hmin/cfg.Physical.Gravity)
 
 	dt := math.Min(dtAdv, math.Min(dtVisc, dtGrav))
 
@@ -49,8 +61,8 @@ func ComputeDt(g *Grid, f *Fields, cfg *Config, state *SimState) float64 {
 	if state.Step > 0 {
 		dt = math.Min(dt, state.DT*cfg.Numerical.DTGrowthFactor)
 	}
-	if dt > cfg.Numerical.MaxDT {
-		dt = cfg.Numerical.MaxDT
+	if dt > maxDT {
+		dt = maxDT
 	}
 	if dt <= 0 || math.IsNaN(dt) || math.IsInf(dt, 0) {
 		panic(fmt.Sprintf("ComputeDt produced non-finite/non-positive dt: %g", dt))

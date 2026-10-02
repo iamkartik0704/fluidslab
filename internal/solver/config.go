@@ -83,6 +83,7 @@ type Config struct {
 		ClipRedistribute bool
 		SubstepMom       int
 		SubstepVOF       int
+		MaxCFLFrac       float64 // if > 0, cap dt so that CFL <= MaxCFLFrac * native CFL limit
 	}
 	TimeScale TimeScaleConvention
 	XStarDef  XStarConvention
