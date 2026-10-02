@@ -50,7 +50,9 @@ func ComputeDt(g *Grid, f *Fields, cfg *Config, state *SimState) float64 {
 	}
 	dtVisc := maxDT
 	if nuMax > 0 {
-		dtVisc = cflVisc * hmin * hmin / nuMax
+		// 2D explicit diffusion stability limit: dt <= h^2 / (4*nu).
+		// ViscousCFL is then a safety factor on that limit.
+		dtVisc = cflVisc * hmin * hmin / (4.0 * nuMax)
 	}
 
 	dtGrav := cflGrav * math.Sqrt(hmin/cfg.Physical.Gravity)
