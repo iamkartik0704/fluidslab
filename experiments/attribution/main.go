@@ -69,22 +69,22 @@ func runSimAttr(cellsPerL0 int, freeSlip, vanLeer bool, rhoRatio float64, halfDt
 	cfg.Numerical.SecondOrderAdvect = vanLeer
 	cfg.Numerical.SplitDivFix = true
 	cfg.Numerical.ClipRedistribute = true
-	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0 
-	
+	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
+
 	if halfDt {
 		cfg.Numerical.MaxDT = 0.5 * cfg.Numerical.MaxDT
 		cfg.Numerical.CFL = 0.5 * cfg.Numerical.CFL
 	}
-	
+
 	sim := solver.NewSimulation(cfg, nx, ny, width, height, false)
 	sim.InitDamBreak()
-	
+
 	var Z_sim, T_sim, Z_01, Z_001 []float64
 	maxZ := -1.0
-	
+
 	for {
 		sim.Step(-1)
-		
+
 		if sim.State.FrontXStar > maxZ {
 			maxZ = sim.State.FrontXStar
 			Z_sim = append(Z_sim, sim.State.FrontXStar)
@@ -92,7 +92,7 @@ func runSimAttr(cellsPerL0 int, freeSlip, vanLeer bool, rhoRatio float64, halfDt
 			Z_01 = append(Z_01, sim.State.FrontXStar01)
 			Z_001 = append(Z_001, sim.State.FrontXStar001)
 		}
-		
+
 		if sim.State.FrontXStar >= 8.0 || sim.State.TStar >= 6.0 {
 			break
 		}
@@ -103,9 +103,15 @@ func runSimAttr(cellsPerL0 int, freeSlip, vanLeer bool, rhoRatio float64, halfDt
 func reportDiff(name string, Z_exp, T_exp, Z_sim, T_sim []float64) {
 	fmt.Printf("\n--- %s ---\n", name)
 	for i, z := range Z_exp {
-		if z < 1.44 { continue }
-		if z > Z_sim[len(Z_sim)-1] { continue }
-		if z > 7.0 { continue }
+		if z < 1.44 {
+			continue
+		}
+		if z > Z_sim[len(Z_sim)-1] {
+			continue
+		}
+		if z > 7.0 {
+			continue
+		}
 		t_sim := interpTSim(Z_sim, T_sim, z)
 		dt := t_sim - T_exp[i]
 		relErr := dt / T_exp[i]
@@ -127,19 +133,19 @@ func main() {
 	reportDiff("Baseline (0.5 crossing)", Z_exp, T_exp, Z_base, T_base)
 	reportDiff("Baseline (0.1 crossing)", Z_exp, T_exp, Z01_base, T_base)
 	reportDiff("Baseline (0.01 crossing)", Z_exp, T_exp, Z001_base, T_base)
-	
+
 	fmt.Println("Van Leer")
 	Z_vl, T_vl, _, _ := runSimAttr(16, true, true, 1000.0, false)
 	reportDiff("Van Leer (0.5 crossing)", Z_exp, T_exp, Z_vl, T_vl)
-	
+
 	fmt.Println("32 cells/L0")
 	Z_32, T_32, _, _ := runSimAttr(32, true, false, 1000.0, false)
 	reportDiff("32 cells/L0 (0.5 crossing)", Z_exp, T_exp, Z_32, T_32)
-	
+
 	fmt.Println("Density ratio 100")
 	Z_100, T_100, _, _ := runSimAttr(16, true, false, 100.0, false)
 	reportDiff("Density ratio 100", Z_exp, T_exp, Z_100, T_100)
-	
+
 	fmt.Println("Half DT")
 	Z_dt, T_dt, _, _ := runSimAttr(16, true, false, 1000.0, true)
 	reportDiff("Half DT", Z_exp, T_exp, Z_dt, T_dt)

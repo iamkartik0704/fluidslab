@@ -23,15 +23,19 @@ var ghiaRe100V = [][2]float64{
 }
 
 func clampi(v, lo, hi int) int {
-	if v < lo { return lo }
-	if v > hi { return hi }
+	if v < lo {
+		return lo
+	}
+	if v > hi {
+		return hi
+	}
 	return v
 }
 
 func sampleCenterlineU(g *solver.Grid, f *solver.Fields) func(yNorm float64) float64 {
 	return func(yNorm float64) float64 {
 		y := yNorm * float64(g.Ny) * g.Dy
-		jf := y/g.Dy + 0.5 
+		jf := y/g.Dy + 0.5
 		j0 := int(math.Floor(jf))
 		w := jf - float64(j0)
 		i0 := 1 + g.Nx/2
@@ -46,7 +50,7 @@ func sampleCenterlineU(g *solver.Grid, f *solver.Fields) func(yNorm float64) flo
 func sampleCenterlineV(g *solver.Grid, f *solver.Fields) func(xNorm float64) float64 {
 	return func(xNorm float64) float64 {
 		x := xNorm * float64(g.Nx) * g.Dx
-		iF := x/g.Dx + 0.5 
+		iF := x/g.Dx + 0.5
 		i0 := int(math.Floor(iF))
 		w := iF - float64(i0)
 		j0 := 1 + g.Ny/2
@@ -63,7 +67,9 @@ func computeMaxError(g *solver.Grid, f *solver.Fields) float64 {
 	maxErr := 0.0
 	for _, pt := range ghiaRe100 {
 		y, want := pt[0], pt[1]
-		if y == 0 || y == 1 || y == 0.9766 || y == 0.0547 { continue }
+		if y == 0 || y == 1 || y == 0.9766 || y == 0.0547 {
+			continue
+		}
 		err := math.Abs(sample(y) - want)
 		if err > maxErr {
 			maxErr = err
@@ -85,7 +91,7 @@ func runCavitySuite() {
 				scheme = "VanLeer"
 			}
 			fmt.Printf("\n=== N=%d %s ===\n", n, scheme)
-			
+
 			cfg := solver.DefaultConfig()
 			cfg.Numerical.OpenTop = false
 			cfg.Numerical.LidVelocity = 1.0
@@ -102,7 +108,7 @@ func runCavitySuite() {
 			for sim.State.Time < 10.0 {
 				sim.Step(-1)
 			}
-			
+
 			su := sampleCenterlineU(sim.Grid, sim.Fields)
 			fmt.Printf("u(y=0) = %g\n", su(0))
 			fmt.Printf("u(y=1) = %g\n", su(1))
@@ -119,7 +125,9 @@ func printProfiles(g *solver.Grid, f *solver.Fields) {
 	var mu, mv, uLoc, vLoc float64
 	for _, pt := range ghiaRe100 {
 		y, w := pt[0], pt[1]
-		if y == 0 || y == 1 || y == 0.9766 || y == 0.0547 { continue }
+		if y == 0 || y == 1 || y == 0.9766 || y == 0.0547 {
+			continue
+		}
 		err := math.Abs(su(y) - w)
 		if err > mu {
 			mu = err
@@ -128,7 +136,9 @@ func printProfiles(g *solver.Grid, f *solver.Fields) {
 	}
 	for _, pt := range ghiaRe100V {
 		x, w := pt[0], pt[1]
-		if x == 0 || x == 1 { continue }
+		if x == 0 || x == 1 {
+			continue
+		}
 		err := math.Abs(sv(x) - w)
 		if err > mv {
 			mv = err

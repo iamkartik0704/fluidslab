@@ -43,23 +43,23 @@ type WindowStat struct {
 }
 
 type RunResult struct {
-	Name string
-	WallTime time.Duration
-	Steps int
-	MaxVolDrift float64
-	Warnings int
-	MaxDiv float64
-	FinalDiv float64
+	Name            string
+	WallTime        time.Duration
+	Steps           int
+	MaxVolDrift     float64
+	Warnings        int
+	MaxDiv          float64
+	FinalDiv        float64
 	MeanPoissonIter float64
-	MaxPoissonIter int
-	
+	MaxPoissonIter  int
+
 	Windows [4]WindowStat // 0-2, 2-4, 4-8, 8-12
-	
-	Z_sim []float64
-	T_sim []float64
-	Z_01  []float64
-	Z_001 []float64
-	MaxAdvCFL float64
+
+	Z_sim      []float64
+	T_sim      []float64
+	Z_01       []float64
+	Z_001      []float64
+	MaxAdvCFL  float64
 	MeanAdvCFL float64
 }
 
@@ -79,7 +79,7 @@ func getGitInfo() (string, bool) {
 
 func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale float64, subMom, subVOF int, rhoRatio float64, gitHash string, gitDirty bool) RunResult {
 	start := time.Now()
-	
+
 	L0 := 0.05715
 	H0 := 2.0 * L0
 	width := 15.0 * L0
@@ -103,7 +103,7 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 	cfg.Numerical.SecondOrderAdvect = vanLeer
 	cfg.Numerical.SplitDivFix = true
 	cfg.Numerical.ClipRedistribute = true
-	
+
 	cfg.Numerical.CFL *= dtScale
 	cfg.Numerical.ViscousCFL *= dtScale
 	cfg.Numerical.GravityCFL *= dtScale
@@ -112,15 +112,15 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 	cfg.Numerical.SubstepMom = subMom
 	cfg.Numerical.SubstepVOF = subVOF
 
-	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0 
-	
+	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
+
 	sim := solver.NewSimulation(cfg, nx, ny, width, height, false)
 	sim.InitDamBreak()
-	
+
 	res := RunResult{
 		Name: name,
 	}
-	
+
 	initialVol := sim.State.Volume
 	maxVolDrift := 0.0
 	sumIter := 0
@@ -134,9 +134,13 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 	defer fCsv.Close()
 
 	advStr := "FirstOrder"
-	if vanLeer { advStr = "VanLeer" }
+	if vanLeer {
+		advStr = "VanLeer"
+	}
 	wallStr := "NoSlip"
-	if freeSlip { wallStr = "FreeSlip" }
+	if freeSlip {
+		wallStr = "FreeSlip"
+	}
 
 	fmt.Fprintf(fCsv, "# commit=%s dirty=%v domain=15L0x4L0 cellsPerL0=%d advection=%s wall=%s density_ratio=%.1f t*=t_sqrt(2g/L0)\n",
 		gitHash, gitDirty, cellsPerL0, advStr, wallStr, rhoRatio)
@@ -144,9 +148,9 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 
 	for {
 		sim.Step(0)
-		
+
 		t_star := sim.State.TStar
-		
+
 		if sim.State.FrontXStar > 0 {
 			res.Z_sim = append(res.Z_sim, sim.State.FrontXStar)
 			res.T_sim = append(res.T_sim, t_star)
@@ -159,19 +163,29 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 		if driftFrac > maxVolDrift {
 			maxVolDrift = driftFrac
 		}
-		if sim.State.MaxDiv > res.MaxDiv { res.MaxDiv = sim.State.MaxDiv }
+		if sim.State.MaxDiv > res.MaxDiv {
+			res.MaxDiv = sim.State.MaxDiv
+		}
 		res.FinalDiv = sim.State.MaxDiv // updates every step
-		
+
 		pIter := sim.State.PoissonIter
 		sumIter += pIter
 		countIter++
 		if pIter > res.MaxPoissonIter {
 			res.MaxPoissonIter = pIter
 		}
-		
+
 		// Window stats: 0-2, 2-4, 4-8, 8-12
 		wIdx := -1
-		if t_star <= 2.0 { wIdx = 0 } else if t_star <= 4.0 { wIdx = 1 } else if t_star <= 8.0 { wIdx = 2 } else if t_star <= 12.0 { wIdx = 3 }
+		if t_star <= 2.0 {
+			wIdx = 0
+		} else if t_star <= 4.0 {
+			wIdx = 1
+		} else if t_star <= 8.0 {
+			wIdx = 2
+		} else if t_star <= 12.0 {
+			wIdx = 3
+		}
 		if wIdx >= 0 {
 			res.Windows[wIdx].SumIter += pIter
 			res.Windows[wIdx].CountIter++
@@ -180,13 +194,11 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 			}
 		}
 
-
-
 		if sim.State.FrontXStar >= 14.0 || t_star >= 12.0 {
 			break
 		}
 	}
-	
+
 	res.WallTime = time.Since(start)
 	res.Steps = sim.State.Step
 	res.MaxVolDrift = maxVolDrift
@@ -196,7 +208,7 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 	if sim.State.AdvCFLCount > 0 {
 		res.MeanAdvCFL = sim.State.SumAdvCFL / float64(sim.State.AdvCFLCount)
 	}
-	
+
 	fmt.Printf("Finished %s in %v (MaxCFL: %.4f, MeanCFL: %.4f)\n", name, res.WallTime, res.MaxAdvCFL, res.MeanAdvCFL)
 	return res
 }
@@ -229,7 +241,7 @@ func main() {
 		runSimAttr("N16_FStrue_VLfalse", 16, true, false, 1.0, 1, 1, 1000.0, gitHash, gitDirty),
 		runSimAttr("N16_FSfalse_VLtrue", 16, false, true, 1.0, 1, 1, 1000.0, gitHash, gitDirty),
 	}
-	
+
 	fmt.Println("\n--- Convergence Series (T_sim at Z=1.44, 3, 5, 7, 10, 14) ---")
 	targetZs := []float64{1.44, 3, 5, 7, 10, 14}
 	for _, r := range runs {
@@ -241,18 +253,18 @@ func main() {
 			fmt.Printf("  Z=%.2f: T_sim_raw=%.3f T_sim_aligned=%.3f\n", z, t_sim, t_sim_aligned)
 		}
 	}
-	
+
 	fmt.Println("\n--- Full Benchcompare ---")
 	benchConfigs := []int{1, 2, 4, 8, 9} // indices of interesting runs (N16, N32 native, N16 dt4, N16 FO FS, N16 VL NS)
-	
+
 	for _, confIdx := range benchConfigs {
 		r := runs[confIdx]
 		fmt.Printf("\nBenchcompare for %s:\n", r.Name)
 		alignedT := benchmark.AlignTime(r.Z_sim, r.T_sim, data.TimeNormalisation.AnchorZ, data.TimeNormalisation.AnchorT)
-		
+
 		for _, aType := range []string{"a=2.25", "a=1.125"} {
 			fmt.Printf("  [Data: %s]\n", aType)
-			
+
 			var Z_exp, T_exp []float64
 			if aType == "a=2.25" {
 				Z_exp = data.Scales.A2p25In.Mean.Z
@@ -261,56 +273,66 @@ func main() {
 				Z_exp = data.Scales.A1p125In.Mean.Z
 				T_exp = data.Scales.A1p125In.Mean.T
 			}
-			
+
 			var rmsRaw7, rmsAligned7 float64
 			var maxRaw7, maxAligned7 float64
 			var countRMS7 int
-			
+
 			var rmsRaw14, rmsAligned14 float64
 			var maxRaw14, maxAligned14 float64
 			var countRMS14 int
-			
+
 			for i, z := range Z_exp {
-				if z < 1.44 || z > r.Z_sim[len(r.Z_sim)-1] { continue }
+				if z < 1.44 || z > r.Z_sim[len(r.Z_sim)-1] {
+					continue
+				}
 				t_sim := benchmark.InterpTSim(r.Z_sim, r.T_sim, z)
 				t_sim_aligned := benchmark.InterpTSim(r.Z_sim, alignedT, z)
 				dT := t_sim - T_exp[i]
 				dT_aligned := t_sim_aligned - T_exp[i]
-				
+
 				pctRaw := 100 * dT / T_exp[i]
 				pctAligned := 100 * dT_aligned / T_exp[i]
-				
+
 				var inBand string
 				if pctAligned >= -5.0 && pctAligned <= 5.0 {
 					inBand = "IN_BAND"
 				} else {
 					inBand = "OUT"
 				}
-				
-				fmt.Printf("    Z=%.2f: T_exp=%.2f T_raw=%.2f T_aligned=%.2f dT/T_raw=%+5.1f%% dT/T_aligned=%+5.1f%% [%s]\n", 
+
+				fmt.Printf("    Z=%.2f: T_exp=%.2f T_raw=%.2f T_aligned=%.2f dT/T_raw=%+5.1f%% dT/T_aligned=%+5.1f%% [%s]\n",
 					z, T_exp[i], t_sim, t_sim_aligned, pctRaw, pctAligned, inBand)
-					
+
 				if z <= 7.0 {
 					rmsRaw7 += pctRaw * pctRaw
 					rmsAligned7 += pctAligned * pctAligned
 					countRMS7++
-					if math.Abs(pctRaw) > maxRaw7 { maxRaw7 = math.Abs(pctRaw) }
-					if math.Abs(pctAligned) > maxAligned7 { maxAligned7 = math.Abs(pctAligned) }
+					if math.Abs(pctRaw) > maxRaw7 {
+						maxRaw7 = math.Abs(pctRaw)
+					}
+					if math.Abs(pctAligned) > maxAligned7 {
+						maxAligned7 = math.Abs(pctAligned)
+					}
 				}
 				if z <= 14.0 {
 					rmsRaw14 += pctRaw * pctRaw
 					rmsAligned14 += pctAligned * pctAligned
 					countRMS14++
-					if math.Abs(pctRaw) > maxRaw14 { maxRaw14 = math.Abs(pctRaw) }
-					if math.Abs(pctAligned) > maxAligned14 { maxAligned14 = math.Abs(pctAligned) }
+					if math.Abs(pctRaw) > maxRaw14 {
+						maxRaw14 = math.Abs(pctRaw)
+					}
+					if math.Abs(pctAligned) > maxAligned14 {
+						maxAligned14 = math.Abs(pctAligned)
+					}
 				}
 			}
 			if countRMS7 > 0 {
-				fmt.Printf("    -> [1.44, 7]  RMS_raw=%.1f%% Max_raw=%.1f%% | RMS_aligned=%.1f%% Max_aligned=%.1f%%\n", 
+				fmt.Printf("    -> [1.44, 7]  RMS_raw=%.1f%% Max_raw=%.1f%% | RMS_aligned=%.1f%% Max_aligned=%.1f%%\n",
 					math.Sqrt(rmsRaw7/float64(countRMS7)), maxRaw7, math.Sqrt(rmsAligned7/float64(countRMS7)), maxAligned7)
 			}
 			if countRMS14 > 0 {
-				fmt.Printf("    -> [1.44, 14] RMS_raw=%.1f%% Max_raw=%.1f%% | RMS_aligned=%.1f%% Max_aligned=%.1f%%\n", 
+				fmt.Printf("    -> [1.44, 14] RMS_raw=%.1f%% Max_raw=%.1f%% | RMS_aligned=%.1f%% Max_aligned=%.1f%%\n",
 					math.Sqrt(rmsRaw14/float64(countRMS14)), maxRaw14, math.Sqrt(rmsAligned14/float64(countRMS14)), maxAligned14)
 			}
 		}

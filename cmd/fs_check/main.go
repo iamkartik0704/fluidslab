@@ -1,9 +1,9 @@
 package main
 
 import (
+	"dambreak/internal/solver"
 	"fmt"
 	"math"
-	"dambreak/internal/solver"
 )
 
 func main() {

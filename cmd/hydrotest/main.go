@@ -29,7 +29,7 @@ func main() {
 	cfg.Physical.RhoA = 1.2
 
 	sim := solver.NewSimulation(cfg, nx, ny, W, H, false)
-	
+
 	for j := 1; j <= ny; j++ {
 		for i := 1; i <= nx; i++ {
 			y := sim.Grid.Yc[sim.Grid.IdxCC(i, j)]
@@ -41,13 +41,14 @@ func main() {
 		}
 	}
 	solver.ApplyAlphaBC(sim.Grid, sim.Fields)
-	solver.UpdateProperties(sim.Grid, sim.Fields, &cfg); solver.InterpolateRhoToFaces(sim.Grid, sim.Fields, &cfg)
+	solver.UpdateProperties(sim.Grid, sim.Fields, &cfg)
+	solver.InterpolateRhoToFaces(sim.Grid, sim.Fields, &cfg)
 
 	err := sim.Step(0)
 	fmt.Printf("Step error: %v\n", err)
 
 	for j := 1; j <= ny; j++ {
-		div := (sim.Fields.UStar[sim.Grid.EastVFace(32, j)] - sim.Fields.UStar[sim.Grid.WestVFace(32, j)])*sim.Grid.InvDx + (sim.Fields.VStar[sim.Grid.NorthHFace(32, j)] - sim.Fields.VStar[sim.Grid.SouthHFace(32, j)])*sim.Grid.InvDy
+		div := (sim.Fields.UStar[sim.Grid.EastVFace(32, j)]-sim.Fields.UStar[sim.Grid.WestVFace(32, j)])*sim.Grid.InvDx + (sim.Fields.VStar[sim.Grid.NorthHFace(32, j)]-sim.Fields.VStar[sim.Grid.SouthHFace(32, j)])*sim.Grid.InvDy
 		fmt.Printf("j=%d, P=%f, div=%f, VStarN=%f, VStarS=%f\n", j, sim.Fields.P[sim.Grid.IdxCC(32, j)], div, sim.Fields.VStar[sim.Grid.NorthHFace(32, j)], sim.Fields.VStar[sim.Grid.SouthHFace(32, j)])
 	}
 
@@ -68,22 +69,22 @@ func main() {
 			idx := sim.Grid.IdxCC(i, j)
 			a := sim.Fields.Alpha[idx]
 			y := sim.Grid.Yc[idx]
-			
+
 			pExact := 0.0
 			if y <= H0 {
-				pExact = rhoW * g * (H0 - y) + rhoA * g * (H - H0)
+				pExact = rhoW*g*(H0-y) + rhoA*g*(H-H0)
 			} else {
 				pExact = rhoA * g * (H - y)
 			}
-			
+
 			pSim := sim.Fields.P[idx]
 			e := math.Abs(pSim - pExact)
-			
+
 			if a > 0.99 && y <= H0 {
 				sumErr += e
 				countFullyWater++
 			}
-			
+
 			if e > maxErr {
 				maxErr = e
 				maxErrI = i

@@ -72,13 +72,13 @@ type RunResult struct {
 	T_sim []float64
 
 	// Drift decomposition
-	VolSweepX   float64
-	VolSweepY   float64
-	VolClip     float64
-	TopOutflow  float64
-	FinalDrift  float64
-	InitialVol  float64
-	ClipRedist  bool
+	VolSweepX  float64
+	VolSweepY  float64
+	VolClip    float64
+	TopOutflow float64
+	FinalDrift float64
+	InitialVol float64
+	ClipRedist bool
 }
 
 func runSim(name string, cellsPerL0 int, dtScale float64, subMom, subVOF int, cflFrac float64, gitHash string, gitDirty bool) RunResult {
@@ -374,7 +374,7 @@ func main() {
 		{"N16_dt4_global", 0.25, 1, 1, 0},
 		{"N16_subMom4", 1.0, 4, 1, 0},
 		{"N16_subVOF4", 1.0, 1, 4, 0},
-		{"N16_cflcap_1.0", 1.0, 1, 1, 1.0},  // same as native
+		{"N16_cflcap_1.0", 1.0, 1, 1, 1.0},   // same as native
 		{"N16_cflcap_0.25", 1.0, 1, 1, 0.25}, // same as dt/4
 	}
 

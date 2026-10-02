@@ -59,7 +59,7 @@ func clampi(v, lo, hi int) int {
 func sampleCenterlineU(g *solver.Grid, f *solver.Fields) func(yNorm float64) float64 {
 	return func(yNorm float64) float64 {
 		y := yNorm * float64(g.Ny) * g.Dy
-		jf := y/g.Dy + 0.5 
+		jf := y/g.Dy + 0.5
 		j0 := int(math.Floor(jf))
 		w := jf - float64(j0)
 		i0 := 1 + g.Nx/2
@@ -80,7 +80,7 @@ func sampleCenterlineU(g *solver.Grid, f *solver.Fields) func(yNorm float64) flo
 func sampleCenterlineV(g *solver.Grid, f *solver.Fields) func(xNorm float64) float64 {
 	return func(xNorm float64) float64 {
 		x := xNorm * float64(g.Nx) * g.Dx
-		iF := x/g.Dx + 0.5 
+		iF := x/g.Dx + 0.5
 		i0 := int(math.Floor(iF))
 		w := iF - float64(i0)
 		j0 := 1 + g.Ny/2
@@ -111,7 +111,7 @@ func main() {
 	cfg.Physical.RhoA, cfg.Physical.MuA = 1.0, 0.01
 
 	sim := solver.NewSimulation(cfg, nx, nx, 1.0, 1.0, true)
-	
+
 	tMax := 20.0
 	for sim.State.Time < tMax {
 		if err := sim.Step(-1); err != nil {

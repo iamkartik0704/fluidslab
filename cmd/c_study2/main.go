@@ -10,11 +10,11 @@ func main() {
 	fmt.Println("=== 2. Taylor-Green defect ===")
 	// run a baseline 32x32 Taylor-Green up to t=1.0, printing error every 0.1
 	runTGTime(32, false, false, false, 1.0)
-	runTGIso(32, false, true, false, 1.0) // no advection
-	runTGIso(32, false, false, true, 1.0) // no viscosity
-	runTGIso(32, false, false, false, 0.5) // dt halved
+	runTGIso(32, false, true, false, 1.0)   // no advection
+	runTGIso(32, false, false, true, 1.0)   // no viscosity
+	runTGIso(32, false, false, false, 0.5)  // dt halved
 	runTGIso(32, false, false, false, 0.25) // dt quartered
-	runTGIso(32, true, false, false, 1.0) // van Leer
+	runTGIso(32, true, false, false, 1.0)   // van Leer
 }
 
 func getCfg(N int) solver.Config {
@@ -84,18 +84,20 @@ func runTGTime(N int, vanLeer bool, noAdv bool, noVisc bool, dtScale float64) {
 	cfg := getCfg(N)
 	cfg.Numerical.SecondOrderAdvect = vanLeer
 	cfg.Numerical.CFL = 0.4 * dtScale
-	if noAdv { cfg.Numerical.CFL = 1000.0 } // hack to skip advection or something?
+	if noAdv {
+		cfg.Numerical.CFL = 1000.0
+	} // hack to skip advection or something?
 	// actually we must disable advection in solver
-	
+
 	L := 2 * math.Pi
 	sim := solver.NewSimulation(cfg, N, N, L, L, false)
 	initTG(sim)
 	solver.ApplyVelocityBC(sim.Fields, &cfg, sim.Grid)
-	
+
 	// Error at t=0
 	meanErr, maxErr, i, j := calcErr(sim)
 	fmt.Printf("TG %dx%d (t=%.2f): MeanErr=%.2e, MaxErr=%.2e at (i=%d, j=%d)\n", N, N, sim.State.Time, meanErr, maxErr, i, j)
-	
+
 	nextT := 0.1
 	for sim.State.Time < 1.0 {
 		sim.Step(-1)
@@ -117,8 +119,9 @@ func runTGIso(N int, vanLeer bool, noAdv bool, noVisc bool, dtScale float64) {
 	sim := solver.NewSimulation(cfg, N, N, L, L, false)
 	initTG(sim)
 	solver.ApplyVelocityBC(sim.Fields, &cfg, sim.Grid)
-	for sim.State.Time < 1.0 { sim.Step(-1) }
+	for sim.State.Time < 1.0 {
+		sim.Step(-1)
+	}
 	meanErr, maxErr, i, j := calcErr(sim)
 	fmt.Printf("TG %dx%d (t=1.00, adv=%v, visc=%v, vanLeer=%v, dtScale=%v): MeanErr=%.2e, MaxErr=%.2e at (i=%d, j=%d)\n", N, N, !noAdv, !noVisc, vanLeer, dtScale, meanErr, maxErr, i, j)
 }
-

@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"dambreak/internal/solver"
+	"fmt"
 )
 
 func main() {
@@ -21,21 +21,21 @@ func main() {
 	cfg.Numerical.SecondOrderAdvect = true
 	cfg.Numerical.SplitDivFix = true
 	cfg.Numerical.ClipRedistribute = true
-	
+
 	// dtScale = 0.8 (0.8 * 0.25 = 0.2)
 	cfg.Numerical.CFL *= 0.8
 	cfg.Numerical.ViscousCFL *= 0.8
 	cfg.Numerical.GravityCFL *= 0.8
 	cfg.Numerical.MaxDT *= 0.8
 
-	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0 
-	
+	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
+
 	sim := solver.NewSimulation(cfg, cfg.Domain.Nx, cfg.Domain.Ny, cfg.Domain.Width, cfg.Domain.Height, false)
 	sim.InitDamBreak()
-	
+
 	Zs := []float64{3, 5, 7, 10, 14}
 	nextZIdx := 0
-	
+
 	for {
 		sim.Step(0)
 		if sim.State.FrontXStar >= Zs[nextZIdx] {

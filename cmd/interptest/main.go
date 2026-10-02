@@ -54,7 +54,7 @@ func main() {
 	fmt.Printf("Interpolated T(Z=1.44) = %f\n", t144)
 	fmt.Printf("Interpolated T(Z=10.0) = %f\n", t10)
 	fmt.Printf("Interpolated T(Z=14.0) = %f\n", t14)
-	fmt.Printf("Aligned T(Z=14.0) = %f\n", t14 - t144 + 1.25)
-	
-	fmt.Printf("Late speed [10, 14]: %f\n", 4.0 / (t14 - t10))
+	fmt.Printf("Aligned T(Z=14.0) = %f\n", t14-t144+1.25)
+
+	fmt.Printf("Late speed [10, 14]: %f\n", 4.0/(t14-t10))
 }

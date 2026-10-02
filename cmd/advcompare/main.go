@@ -54,8 +54,12 @@ func runCavityGhia(secondOrder bool) float64 {
 		w := jf - float64(j0)
 		i0 := 1 + g.Nx/2
 		clamp := func(v, lo, hi int) int {
-			if v < lo { return lo }
-			if v > hi { return hi }
+			if v < lo {
+				return lo
+			}
+			if v > hi {
+				return hi
+			}
 			return v
 		}
 		val := func(jj int) float64 {

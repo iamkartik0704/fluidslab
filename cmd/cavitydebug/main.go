@@ -53,7 +53,7 @@ func runDebug(n int, so bool, label string, dtDiv float64, ptolo float64, regLid
 
 	prevU := make([]float64, len(sim.Fields.U))
 	copy(prevU, sim.Fields.U)
-	
+
 	nextPrint := 1.0
 	for sim.State.Time <= 60.0 {
 		err := sim.Step(-1)
@@ -66,11 +66,11 @@ func runDebug(n int, so bool, label string, dtDiv float64, ptolo float64, regLid
 			maxDU := 0.0
 			maxI := -1
 			maxJ := -1
-			
+
 			for j := 1; j <= sim.Grid.Ny; j++ {
 				for i := 1; i <= sim.Grid.Nx; i++ {
 					idx := sim.Grid.IdxU(i, j)
-					du := math.Abs(sim.Fields.U[idx] - prevU[idx]) / sim.State.DT
+					du := math.Abs(sim.Fields.U[idx]-prevU[idx]) / sim.State.DT
 					if du > maxDU {
 						maxDU = du
 						maxI = i
@@ -78,10 +78,10 @@ func runDebug(n int, so bool, label string, dtDiv float64, ptolo float64, regLid
 					}
 				}
 			}
-			
+
 			ke := calcKE(sim.Grid, sim.Fields)
 			maxU := maxAbs(sim.Fields.U)
-			
+
 			fmt.Printf(" t=%5.1f  KE=%.6e  max|u|=%.6f  max|du/dt|=%.6e at (i=%d, j=%d)\n", sim.State.Time, ke, maxU, maxDU, maxI, maxJ)
 			nextPrint += 1.0
 		}
@@ -105,7 +105,7 @@ func runDebug(n int, so bool, label string, dtDiv float64, ptolo float64, regLid
 func main() {
 	runDebug(65, false, "N=65 FirstOrder Native", 1.0, 0, false)
 	runDebug(65, true, "N=65 VanLeer Native", 1.0, 0, false)
-	
+
 	// b. repeat with dt cap halved and quartered
 	runDebug(65, true, "N=65 VanLeer dt/2", 2.0, 0, false)
 	runDebug(65, true, "N=65 VanLeer dt/4", 4.0, 0, false)

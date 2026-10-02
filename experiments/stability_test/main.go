@@ -38,8 +38,12 @@ func gitInfo() (string, string) {
 func sampleCenterlineU(g *solver.Grid, f *solver.Fields, yNorm float64) float64 {
 	y := yNorm * float64(g.Ny) * g.Dy
 	j := int(y/g.Dy) + 1
-	if j < 1 { j = 1 }
-	if j > g.Ny { j = g.Ny }
+	if j < 1 {
+		j = 1
+	}
+	if j > g.Ny {
+		j = g.Ny
+	}
 	midI := (g.Nx + 1) / 2
 	idx1 := g.IdxU(midI, j)
 	idx2 := g.IdxU(midI+1, j)
@@ -49,8 +53,12 @@ func sampleCenterlineU(g *solver.Grid, f *solver.Fields, yNorm float64) float64 
 func sampleCenterlineV(g *solver.Grid, f *solver.Fields, xNorm float64) float64 {
 	x := xNorm * float64(g.Nx) * g.Dx
 	i := int(x/g.Dx) + 1
-	if i < 1 { i = 1 }
-	if i > g.Nx { i = g.Nx }
+	if i < 1 {
+		i = 1
+	}
+	if i > g.Nx {
+		i = g.Nx
+	}
 	midJ := (g.Ny + 1) / 2
 	idx1 := g.IdxV(i, midJ)
 	idx2 := g.IdxV(i, midJ+1)
@@ -63,7 +71,7 @@ type CavityResult struct {
 	Scheme  string
 	MaxU    float64
 	KE      float64
-	MaxDuDt float64  // max over [tStart,tEnd]
+	MaxDuDt float64 // max over [tStart,tEnd]
 	MaxErrU float64
 	MaxErrV float64
 	RMSErrU float64
@@ -79,7 +87,9 @@ type CavityResult struct {
 // all steps in [tMeas, tEnd].
 func runCavity(n int, cfl float64, so bool, tEnd, tMeas float64) CavityResult {
 	scheme := "FO"
-	if so { scheme = "VL" }
+	if so {
+		scheme = "VL"
+	}
 
 	cfg := solver.DefaultConfig()
 	cfg.Numerical.OpenTop = false
@@ -101,14 +111,18 @@ func runCavity(n int, cfl float64, so bool, tEnd, tMeas float64) CavityResult {
 
 	for sim.State.Time < tEnd {
 		sim.Step(-1)
-		if sim.State.Step == 1 { dt1 = sim.State.DT }
+		if sim.State.Step == 1 {
+			dt1 = sim.State.DT
+		}
 
 		if sim.State.Time >= tMeas {
 			if lastU != nil {
 				dt := sim.State.DT
 				for idx := range sim.Fields.U {
 					d := math.Abs(sim.Fields.U[idx]-lastU[idx]) / dt
-					if d > maxDuDt { maxDuDt = d }
+					if d > maxDuDt {
+						maxDuDt = d
+					}
 				}
 			}
 		}
@@ -126,27 +140,41 @@ func runCavity(n int, cfl float64, so bool, tEnd, tMeas float64) CavityResult {
 			u := 0.5 * (sim.Fields.U[sim.Grid.IdxU(i, j)] + sim.Fields.U[sim.Grid.IdxU(i+1, j)])
 			v := 0.5 * (sim.Fields.V[sim.Grid.IdxV(i, j)] + sim.Fields.V[sim.Grid.IdxV(i, j+1)])
 			sp := math.Sqrt(u*u + v*v)
-			if sp > maxU { maxU = sp }
+			if sp > maxU {
+				maxU = sp
+			}
 			ke += 0.5 * (u*u + v*v) * sim.Grid.Dx * sim.Grid.Dy
 		}
 	}
 
 	maxErrU, sumSqU, cntU := 0.0, 0.0, 0
 	for _, pt := range ghiaU {
-		if pt[0] <= 0 || pt[0] >= 1 { continue }
-		if pt[0] == 0.9766 || pt[0] == 0.0547 { continue } // near-wall exclusion
+		if pt[0] <= 0 || pt[0] >= 1 {
+			continue
+		}
+		if pt[0] == 0.9766 || pt[0] == 0.0547 {
+			continue
+		} // near-wall exclusion
 		e := math.Abs(sampleCenterlineU(sim.Grid, sim.Fields, pt[0]) - pt[1])
-		if e > maxErrU { maxErrU = e }
+		if e > maxErrU {
+			maxErrU = e
+		}
 		sumSqU += e * e
 		cntU++
 	}
 
 	maxErrV, sumSqV, cntV := 0.0, 0.0, 0
 	for _, pt := range ghiaV {
-		if pt[0] <= 0 || pt[0] >= 1 { continue }
-		if pt[0] == 0.9688 || pt[0] == 0.0625 { continue }
+		if pt[0] <= 0 || pt[0] >= 1 {
+			continue
+		}
+		if pt[0] == 0.9688 || pt[0] == 0.0625 {
+			continue
+		}
 		e := math.Abs(sampleCenterlineV(sim.Grid, sim.Fields, pt[0]) - pt[1])
-		if e > maxErrV { maxErrV = e }
+		if e > maxErrV {
+			maxErrV = e
+		}
 		sumSqV += e * e
 		cntV++
 	}
@@ -202,7 +230,9 @@ func runDambreak(cellsPerL0 int, freeSlip, vanLeer bool) map[float64]float64 {
 				}
 			}
 		}
-		if z >= 14.0 || sim.State.TStar >= 12.0 { break }
+		if z >= 14.0 || sim.State.TStar >= 12.0 {
+			break
+		}
 	}
 	return tAtZ
 }
@@ -330,7 +360,11 @@ func main() {
 	// ─── Item 6: Dam-break ───
 	fmt.Println("\n## 6. Dam-break (current commit)")
 	zPoints := []float64{1.44, 3.0, 5.0, 7.0, 10.0, 12.0, 14.0}
-	for _, cfg := range []struct{ n int; fs bool; name string }{
+	for _, cfg := range []struct {
+		n    int
+		fs   bool
+		name string
+	}{
 		{16, false, "N16 no-slip VL"},
 		{16, true, "N16 free-slip VL"},
 	} {
@@ -357,13 +391,22 @@ func main() {
 		nx := int(math.Round(width / L0 * 16))
 		ny := int(math.Round(height / L0 * 16))
 		cfg := solver.DefaultConfig()
-		cfg.Domain.L0 = L0; cfg.Domain.H0 = H0; cfg.Domain.Width = width; cfg.Domain.Height = height
-		cfg.Domain.Nx = nx; cfg.Domain.Ny = ny
-		cfg.Physical.RhoW = 1000.0; cfg.Physical.RhoA = 1.0
-		cfg.Numerical.PoissonTol = 1e-6; cfg.Numerical.CFL = cfl
-		cfg.Numerical.FreeSlip = false; cfg.Numerical.SecondOrderAdvect = false
-		cfg.Numerical.SplitDivFix = true; cfg.Numerical.ClipRedistribute = true
-		cfg.TimeScale = solver.TimeScaleSqrt2gOverL0; cfg.Threads = 1
+		cfg.Domain.L0 = L0
+		cfg.Domain.H0 = H0
+		cfg.Domain.Width = width
+		cfg.Domain.Height = height
+		cfg.Domain.Nx = nx
+		cfg.Domain.Ny = ny
+		cfg.Physical.RhoW = 1000.0
+		cfg.Physical.RhoA = 1.0
+		cfg.Numerical.PoissonTol = 1e-6
+		cfg.Numerical.CFL = cfl
+		cfg.Numerical.FreeSlip = false
+		cfg.Numerical.SecondOrderAdvect = false
+		cfg.Numerical.SplitDivFix = true
+		cfg.Numerical.ClipRedistribute = true
+		cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
+		cfg.Threads = 1
 
 		sim := solver.NewSimulation(cfg, nx, ny, width, height, false)
 		sim.InitDamBreak()
@@ -375,10 +418,14 @@ func main() {
 			if z > maxZ {
 				maxZ = z
 				for _, zt := range []float64{3, 5, 7, 10, 14} {
-					if _, ok := tAtZ[zt]; !ok && z >= zt { tAtZ[zt] = sim.State.TStar }
+					if _, ok := tAtZ[zt]; !ok && z >= zt {
+						tAtZ[zt] = sim.State.TStar
+					}
 				}
 			}
-			if z >= 14.0 || sim.State.TStar >= 12.0 { break }
+			if z >= 14.0 || sim.State.TStar >= 12.0 {
+				break
+			}
 		}
 		fmt.Printf("%-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-8d\n",
 			cfl, tAtZ[3], tAtZ[5], tAtZ[7], tAtZ[10], tAtZ[14], sim.State.Step)
@@ -396,13 +443,22 @@ func main() {
 		nx := int(math.Round(width / L0 * float64(n)))
 		ny := int(math.Round(height / L0 * float64(n)))
 		cfg := solver.DefaultConfig()
-		cfg.Domain.L0 = L0; cfg.Domain.H0 = H0; cfg.Domain.Width = width; cfg.Domain.Height = height
-		cfg.Domain.Nx = nx; cfg.Domain.Ny = ny
-		cfg.Physical.RhoW = 1000.0; cfg.Physical.RhoA = 1.0
-		cfg.Numerical.PoissonTol = 1e-6; cfg.Numerical.CFL = 0.0625
-		cfg.Numerical.FreeSlip = false; cfg.Numerical.SecondOrderAdvect = false
-		cfg.Numerical.SplitDivFix = true; cfg.Numerical.ClipRedistribute = true
-		cfg.TimeScale = solver.TimeScaleSqrt2gOverL0; cfg.Threads = 1
+		cfg.Domain.L0 = L0
+		cfg.Domain.H0 = H0
+		cfg.Domain.Width = width
+		cfg.Domain.Height = height
+		cfg.Domain.Nx = nx
+		cfg.Domain.Ny = ny
+		cfg.Physical.RhoW = 1000.0
+		cfg.Physical.RhoA = 1.0
+		cfg.Numerical.PoissonTol = 1e-6
+		cfg.Numerical.CFL = 0.0625
+		cfg.Numerical.FreeSlip = false
+		cfg.Numerical.SecondOrderAdvect = false
+		cfg.Numerical.SplitDivFix = true
+		cfg.Numerical.ClipRedistribute = true
+		cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
+		cfg.Threads = 1
 
 		sim := solver.NewSimulation(cfg, nx, ny, width, height, false)
 		sim.InitDamBreak()
@@ -414,10 +470,14 @@ func main() {
 			if z > maxZ {
 				maxZ = z
 				for _, zt := range []float64{3, 5, 7, 10, 14} {
-					if _, ok := tAtZ[zt]; !ok && z >= zt { tAtZ[zt] = sim.State.TStar }
+					if _, ok := tAtZ[zt]; !ok && z >= zt {
+						tAtZ[zt] = sim.State.TStar
+					}
 				}
 			}
-			if z >= 14.0 || sim.State.TStar >= 12.0 { break }
+			if z >= 14.0 || sim.State.TStar >= 12.0 {
+				break
+			}
 		}
 		fmt.Printf("%-6d %-10.4f %-10.4f %-10.4f %-10.4f %-10.4f %-8d\n",
 			n, tAtZ[3], tAtZ[5], tAtZ[7], tAtZ[10], tAtZ[14], sim.State.Step)

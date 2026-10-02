@@ -1,9 +1,9 @@
 package main
 
 import (
+	"dambreak/internal/solver"
 	"fmt"
 	"math"
-	"dambreak/internal/solver"
 )
 
 func interpZSim(T_sim, Z_sim []float64, T_target float64) float64 {

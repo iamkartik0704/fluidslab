@@ -32,7 +32,7 @@ func runDamBreak(n int, so, fs bool, dtDiv int, vofSub int, serial bool) {
 
 	targets := []float64{3.0, 5.0, 7.0, 10.0, 14.0}
 	idx := 0
-	
+
 	fmt.Printf("Results: ")
 	for {
 		if err := sim.Step(-1); err != nil {
@@ -54,7 +54,7 @@ func main() {
 	fmt.Println("--- N=16 Native ---")
 	runDamBreak(16, true, true, 1, 1, false)
 	runDamBreak(16, true, true, 1, 1, false)
-	
+
 	fmt.Println("--- N=16 Demo Preset ---")
 	runDamBreak(16, true, true, 1, 4, false)
 	runDamBreak(16, true, true, 1, 4, false)

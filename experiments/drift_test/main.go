@@ -34,13 +34,13 @@ func main() {
 	cfg.Numerical.SplitDivFix = true
 	cfg.Numerical.ClipRedistribute = true
 
-	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0 
-	
+	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
+
 	sim := solver.NewSimulation(cfg, nx, ny, width, height, false)
 	sim.InitDamBreak()
-	
+
 	initialVol := sim.State.Volume
-	
+
 	start := time.Now()
 	for {
 		sim.Step(0)
@@ -48,7 +48,7 @@ func main() {
 			break
 		}
 	}
-	
+
 	fmt.Printf("\n--- Drift Decomposition (N16_FStrue_VLtrue) ---\n")
 	fmt.Printf("WallTime: %v\n", time.Since(start))
 	fmt.Printf("Initial Volume: %.6e m^3\n", initialVol)
@@ -56,6 +56,6 @@ func main() {
 	fmt.Printf("Top Outflow (open BC): %.6e m^3\n", sim.State.TopOutflow)
 	fmt.Printf("X-sweep imbalance: %.6e m^3\n", sim.State.VolSweepX)
 	fmt.Printf("Y-sweep imbalance: %.6e m^3\n", sim.State.VolSweepY)
-	fmt.Printf("Final Drift (Vol(t)-Vol(0)): %.6e m^3 (%.3e%%)\n\n", 
+	fmt.Printf("Final Drift (Vol(t)-Vol(0)): %.6e m^3 (%.3e%%)\n\n",
 		sim.State.VolumeDrift, 100*sim.State.VolumeDrift/initialVol)
 }

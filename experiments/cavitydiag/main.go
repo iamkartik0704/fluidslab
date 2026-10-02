@@ -55,8 +55,12 @@ func sampleCenterlineU(g *solver.Grid, f *solver.Fields) func(yNorm float64) flo
 		i0 := 1 + g.Nx/2
 		val := func(jj int) float64 {
 			jc := jj
-			if jc < 1 { jc = 1 }
-			if jc > g.Ny { jc = g.Ny }
+			if jc < 1 {
+				jc = 1
+			}
+			if jc > g.Ny {
+				jc = g.Ny
+			}
 			return 0.5 * (f.U[g.IdxU(i0-1, jc)] + f.U[g.IdxU(i0, jc)])
 		}
 		return (1-w)*val(j0) + w*val(j0+1)
@@ -72,8 +76,12 @@ func sampleCenterlineV(g *solver.Grid, f *solver.Fields) func(xNorm float64) flo
 		j0 := 1 + g.Ny/2
 		val := func(ii int) float64 {
 			ic := ii
-			if ic < 1 { ic = 1 }
-			if ic > g.Nx { ic = g.Nx }
+			if ic < 1 {
+				ic = 1
+			}
+			if ic > g.Nx {
+				ic = g.Nx
+			}
 			return 0.5 * (f.V[g.IdxV(ic, j0-1)] + f.V[g.IdxV(ic, j0)])
 		}
 		return (1-w)*val(i0) + w*val(i0+1)
@@ -83,7 +91,7 @@ func sampleCenterlineV(g *solver.Grid, f *solver.Fields) func(xNorm float64) flo
 func main() {
 	n := 49
 	fmt.Printf("=== Cavity Diagnosis (Grid %d^2) ===\n", n)
-	
+
 	cfg := solver.DefaultConfig()
 	cfg.Numerical.OpenTop = false
 	cfg.Numerical.LidVelocity = 1.0
@@ -96,36 +104,38 @@ func main() {
 	cfg.Threads = 8
 
 	sim := solver.NewSimulation(cfg, n, n, 1.0, 1.0, true)
-	
+
 	var lastU []float64
 	maxDuDt := 0.0
-	
+
 	for sim.State.Time < 40.0 {
-		if sim.State.Step % 100 == 0 {
+		if sim.State.Step%100 == 0 {
 			lastU = make([]float64, len(sim.Fields.U))
 			copy(lastU, sim.Fields.U)
 		}
-		
+
 		err := sim.Step(-1)
 		if err != nil {
 			fmt.Println("Error:", err)
 			break
 		}
-		
-		if sim.State.Step % 100 == 1 && sim.State.Step > 1 {
+
+		if sim.State.Step%100 == 1 && sim.State.Step > 1 {
 			maxD := 0.0
 			for i := range sim.Fields.U {
-				d := math.Abs(sim.Fields.U[i] - lastU[i]) / sim.State.DT
-				if d > maxD { maxD = d }
+				d := math.Abs(sim.Fields.U[i]-lastU[i]) / sim.State.DT
+				if d > maxD {
+					maxD = d
+				}
 			}
 			maxDuDt = maxD
 		}
 	}
-	
+
 	fmt.Printf("Steps: %d, Final Time: %.2f\n", sim.State.Step, sim.State.Time)
 	fmt.Printf("Steady state measure (max |du/dt| over last 100 steps): %.3e\n", maxDuDt)
 	fmt.Println()
-	
+
 	sU := sampleCenterlineU(sim.Grid, sim.Fields)
 	fmt.Println("--- U Velocity (x=0.5) ---")
 	fmt.Printf("%10s | %10s | %10s | %10s\n", "y", "Ghia U", "Sim U", "Error")
@@ -144,7 +154,7 @@ func main() {
 	}
 	fmt.Printf("Max Interior Error U: %.5f at index %d (y=%.4f)\n", maxErrU, maxErrUIdx, ghiaU[maxErrUIdx][0])
 	fmt.Println()
-	
+
 	sV := sampleCenterlineV(sim.Grid, sim.Fields)
 	fmt.Println("--- V Velocity (y=0.5) ---")
 	fmt.Printf("%10s | %10s | %10s | %10s\n", "x", "Ghia V", "Sim V", "Error")

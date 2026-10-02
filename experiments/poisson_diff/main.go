@@ -33,11 +33,11 @@ func main() {
 	cfg.Numerical.SplitDivFix = true
 	cfg.Numerical.ClipRedistribute = true
 
-	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0 
-	
+	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
+
 	sim := solver.NewSimulation(cfg, nx, ny, width, height, false)
 	sim.InitDamBreak()
-	
+
 	for {
 		sim.Step(0)
 		if sim.State.TStar >= 2.0 {

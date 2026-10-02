@@ -203,12 +203,12 @@ func runDambreakCLI(nx, ny int, tMax float64, outHz int, freeSlip bool, prefix s
 			fmt.Println("STOP:", err)
 			break
 		}
-		
+
 		totalPoissonIters += s.State.PoissonIter
 		if s.State.PoissonIter > maxPoissonIters {
 			maxPoissonIters = s.State.PoissonIter
 		}
-		
+
 		printState()
 
 		if nextTargetIdx < len(targets) && s.State.TStar >= targets[nextTargetIdx] {
@@ -227,7 +227,7 @@ func runDambreakCLI(nx, ny int, tMax float64, outHz int, freeSlip bool, prefix s
 				st.TStar, st.Step, st.FrontXStar, volDriftPct)
 		}
 	}
-	
+
 	wallTime := time.Since(startWall)
 	meanPoissonIters := float64(totalPoissonIters) / float64(s.State.Step)
 	fmt.Printf("Dam break completed in %v\n", wallTime)

@@ -11,8 +11,8 @@ import (
 )
 
 type BenchmarkData struct {
-	Verified         bool   `json:"verified"`
-	Source           string `json:"source"`
+	Verified          bool   `json:"verified"`
+	Source            string `json:"source"`
 	TimeNormalisation struct {
 		AnchorZ float64 `json:"anchor_Z"`
 		AnchorT float64 `json:"anchor_T"`
@@ -54,8 +54,6 @@ type RefRun struct {
 	T_raw  []float64 `json:"T_raw"`
 	Anchor float64   `json:"anchor_T_Z1p44"`
 }
-
-
 
 func main() {
 	b, _ := ioutil.ReadFile("benchmark/martin_moyce.json")
@@ -108,12 +106,12 @@ func main() {
 		cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
 		sim.InitDamBreak()
 		solver.ApplyAlphaBC(sim.Grid, sim.Fields)
-		
+
 		fmt.Printf("Initial Z*: %f\n", sim.State.FrontXStar)
-		
+
 		var simZ []float64
 		var simT []float64
-		
+
 		idxTarget := 0
 		anchorT := 0.0
 
@@ -124,11 +122,11 @@ func main() {
 				break
 			}
 			zNow := sim.State.FrontXStar
-			
+
 			if sim.State.Step == 1 {
 				fmt.Printf("Step 1 Z*: %f\n", zNow)
 			}
-			
+
 			if anchorT == 0.0 && zNow >= 1.44 {
 				anchorT = sim.State.TStar
 			}
@@ -138,7 +136,7 @@ func main() {
 				simT = append(simT, sim.State.TStar)
 				idxTarget++
 			}
-			
+
 			if idxTarget >= len(targets) {
 				break
 			}
@@ -146,17 +144,23 @@ func main() {
 				break
 			}
 		}
-		
+
 		wallTime := time.Since(startWall)
 		fmt.Printf("Finished in %v\n", wallTime)
 		report.WriteString(fmt.Sprintf("Wall time to Z=14: %v\n", wallTime))
 
 		wallType := "No-Slip"
-		if r.FreeSlip { wallType = "Free-Slip" }
+		if r.FreeSlip {
+			wallType = "Free-Slip"
+		}
 		schType := "First-Order"
-		if r.SO { schType = "Van Leer" }
+		if r.SO {
+			schType = "Van Leer"
+		}
 		dtType := "native"
-		if r.DtDiv > 1 { dtType = fmt.Sprintf("dt/%d", r.DtDiv) }
+		if r.DtDiv > 1 {
+			dtType = fmt.Sprintf("dt/%d", r.DtDiv)
+		}
 
 		rr := RefRun{
 			Header: RunConfig{
@@ -184,7 +188,7 @@ func main() {
 			err := (t_sim - t_exp) / t_exp
 			report.WriteString(fmt.Sprintf("Z=%.2f: T_sim=%.3f, T_exp=%.3f, dT/T=%+.3f\n", z, t_sim, t_exp, err))
 			if z >= 1.44 && z <= 14 {
-				sumSqErr += err*err
+				sumSqErr += err * err
 				if math.Abs(err) > maxErr {
 					maxErr = math.Abs(err)
 				}

@@ -73,8 +73,12 @@ func main() {
 			for jj := 1; jj <= sim.Grid.Ny; jj++ {
 				for ii := 1; ii <= sim.Grid.Nx; ii++ {
 					a := sim.Fields.Alpha[sim.Grid.IdxCC(ii, jj)]
-					if a < minA { minA = a }
-					if a > maxA { maxA = a }
+					if a < minA {
+						minA = a
+					}
+					if a > maxA {
+						maxA = a
+					}
 				}
 			}
 			driftPct := 100 * sim.State.VolumeDrift / sim.State.Volume
