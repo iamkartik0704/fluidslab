@@ -177,6 +177,24 @@
             <div class="chart-legend" id="plotLegend"></div>
             <p class="eyebrow" id="plotTimeScale" style="margin-top:10px"></p>
           </section>
+
+          <!-- ABOUT section moved here and laid out horizontally -->
+          <section class="panel panel--cream">
+            <div class="panel__head">
+              <div>
+                <div class="eyebrow">METHOD · LIMITATIONS · FRONT</div>
+                <h2 class="panel__title">ABOUT</h2>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; align-items: start;">
+              <p><strong>Method.</strong> Volume-of-fluid two-phase incompressible flow on a MAC grid: donor–acceptor VOF advection (Hirt &amp; Nichols 1981), first-order upwind momentum advection, projection method (Chorin), IC(0)-preconditioned conjugate gradient for the pressure Poisson equation, explicit Euler time integration.</p>
+              <p><strong>Known limitations.</strong> Two-dimensional only. First-order interface and momentum advection: strongly diffusive. No surface tension (CSF coefficient reserved but disabled). Open top boundary. Runs auto-pause at t* = 4.0 (validated window).</p>
+              <div>
+                <p><strong>Front position.</strong> The marker shows the solver's reported front: sub-cell interpolation of the α = 0.5 crossing in the bottom cell row. The alternative "99% cumulative" definition reports the x where cumulative fluid area to the left reaches 99% of total fluid area. Both curves are drawn; the plot states which is selected.</p>
+                <p class="eyebrow" style="letter-spacing:.05em; margin-top: 15px;">RESEARCH/TEACHING TOOL — THIS UI MAKES NO CLAIM OF PHYSICAL ACCURACY.</p>
+              </div>
+            </div>
+          </section>
         </div>
       </div>
 
@@ -202,18 +220,6 @@
           </table>
         </section>
 
-        <section class="panel panel--cream">
-          <div class="panel__head">
-            <div>
-              <div class="eyebrow">METHOD · LIMITATIONS · FRONT</div>
-              <h2 class="panel__title">ABOUT</h2>
-            </div>
-          </div>
-          <p><strong>Method.</strong> Volume-of-fluid two-phase incompressible flow on a MAC grid: donor–acceptor VOF advection (Hirt &amp; Nichols 1981), first-order upwind momentum advection, projection method (Chorin), IC(0)-preconditioned conjugate gradient for the pressure Poisson equation, explicit Euler time integration.</p>
-          <p><strong>Known limitations.</strong> Two-dimensional only. First-order interface and momentum advection: strongly diffusive. No surface tension (CSF coefficient reserved but disabled). Open top boundary. Runs auto-pause at t* = 4.0 (validated window).</p>
-          <p><strong>Front position.</strong> The marker shows the solver's reported front: sub-cell interpolation of the α = 0.5 crossing in the bottom cell row. The alternative "99% cumulative" definition reports the x where cumulative fluid area to the left reaches 99% of total fluid area. Both curves are drawn; the plot states which is selected.</p>
-          <p class="eyebrow" style="letter-spacing:.05em">RESEARCH/TEACHING TOOL — THIS UI MAKES NO CLAIM OF PHYSICAL ACCURACY.</p>
-        </section>
       </aside>
   </div> <!-- closes .body -->
 
