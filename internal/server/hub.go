@@ -255,6 +255,7 @@ func (h *Hub) Run(stop <-chan struct{}) {
 					h.removeClient(c)
 				}
 			}
+			latest = nil // DO NOT RE-SEND THE SAME FRAME FOREVER
 
 		case <-statusTick.C:
 			h.mu.Lock()
