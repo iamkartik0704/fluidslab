@@ -506,12 +506,23 @@ const slides = [
   {
     title: "2. INTERFACE TRANSPORT",
     content: `
-      <p><strong>&alpha; Transport (No diffusion, no source):</strong></p>
+      <p><strong>&alpha; Transport: No diffusion, no source</strong></p>
       <div class="kpi-card kpi-card--blue" style="margin: 15px 0; align-items: center;">
         <div class="kpi-card__title">Volume Fraction Advection</div>
         <div style="font-family: var(--font-mono); font-size: 24px;">&part;&alpha;/&part;t + u &middot; &nabla;&alpha; = 0</div>
       </div>
       <p>Equivalent to &part;&alpha;/&part;t + &nabla; &middot; (&alpha;u) = 0 because &nabla; &middot; u = 0 (conservative form).</p>
+      <table class="table" style="margin: 20px 0; background: white; border: 2px solid var(--ink);">
+        <thead style="background: var(--yellow); color: var(--ink);">
+          <tr><th style="color: var(--ink);">Scheme</th><th style="color: var(--ink);">What it does</th><th style="color: var(--ink);">Trade-off</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Plain upwind</td><td>&alpha; treated like any other scalar</td><td>Easy, but interface smears</td></tr>
+          <tr><td style="font-weight: bold; color: var(--blue);">Donor-acceptor (USED)</td><td style="font-weight: bold; color: var(--blue);">Blends upwind/downwind by interface orientation and donor fullness</td><td style="font-weight: bold; color: var(--blue);">Sharp without geometry; needs CFL &lt; 1</td></tr>
+          <tr><td>PLIC</td><td>Straight-line interface per cell, exact geometric fluxes</td><td>Sharpest; many edge cases</td></tr>
+          <tr><td>Van Leer</td><td>Flux limiter for momentum, not for &alpha;</td><td>High order when smooth, bounded at jumps</td></tr>
+        </tbody>
+      </table>
     `
   },
   {
@@ -532,26 +543,18 @@ const slides = [
   {
     title: "4. DENSITY RATIO AND PRESSURE SOLVE",
     content: `
-      <p><strong>Why it is ill-conditioned:</strong> The coefficient 1/&rho; jumps ~832&times; across a single interface cell, so the Poisson matrix entries span about three orders of magnitude and plain CG converges slowly.</p>
       <table class="table" style="margin: 20px 0; background: white; border: 2px solid var(--ink);">
         <thead style="background: var(--yellow); color: var(--ink);">
-          <tr><th style="color: var(--ink);">Fluid</th><th style="color: var(--ink);">Density (&rho;)</th><th style="color: var(--ink);">Kinematic Viscosity (&nu;)</th><th style="color: var(--ink);">Ratio (Water / Air)</th></tr>
+          <tr><th style="color: var(--ink);">Fluid</th><th style="color: var(--ink);">Density (&rho;)</th><th style="color: var(--ink);">Kinematic Viscosity (&nu;)</th><th style="color: var(--ink);">Ratio</th></tr>
         </thead>
         <tbody>
-          <tr><td>Water</td><td>998.0 kg/m&sup3;</td><td>1.00e-6 m&sup2;/s</td><td rowspan="2" style="vertical-align: middle; font-weight: bold; color: var(--blue);">~832x</td></tr>
+          <tr><td>Water</td><td>998.0 kg/m&sup3;</td><td>1.00e-6 m&sup2;/s</td><td rowspan="2" style="vertical-align: middle; font-weight: bold; color: var(--blue);">~832&times; (&rho;)</td></tr>
           <tr><td>Air</td><td>1.20 kg/m&sup3;</td><td>1.48e-5 m&sup2;/s</td></tr>
         </tbody>
       </table>
+      <p><strong>Why it is ill-conditioned:</strong> The coefficient 1/&rho; jumps ~832&times; across a single interface cell, so the Poisson matrix entries span about three orders of magnitude and plain CG converges slowly.</p>
       <p><strong>FIX: IC(0)-PRECONDITIONED CG</strong></p>
-      <table class="table" style="margin: 20px 0; background: white; border: 2px solid var(--ink);">
-        <thead style="background: var(--yellow); color: var(--ink);">
-          <tr><th style="color: var(--ink);">Solver Type</th><th style="color: var(--ink);">Iterations to Converge</th><th style="color: var(--ink);">Time per Step (ms)</th><th style="color: var(--ink);">Scaling (O)</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Standard Conjugate Gradient</td><td>2450</td><td>18.5</td><td>O(N^1.5)</td></tr>
-          <tr><td style="font-weight: bold; color: var(--green);">IC(0) Preconditioned CG</td><td style="font-weight: bold; color: var(--green);">112</td><td style="font-weight: bold; color: var(--green);">2.1</td><td style="font-weight: bold; color: var(--green);">O(N^1.2)</td></tr>
-        </tbody>
-      </table>
+      <p>2450 &rarr; 112 iterations<br>18.5 &rarr; 2.1 ms per step; scaling O(N^1.5) &rarr; O(N^1.2)</p>
       <p><strong>Matrix assembly:</strong> the 5-point Laplacian must treat fluid and empty cells carefully to stay symmetric positive definite.</p>
     `
   },
@@ -564,14 +567,16 @@ const slides = [
         <div class="kpi-card__title">Ritter Solution, c<sub>0</sub> = &radic;(gH)</div>
         <div style="font-family: var(--font-mono); font-size: 24px;">u = (2/3)(c<sub>0</sub> + x/t)<br>h = (2c<sub>0</sub> &minus; x/t)&sup2; / (9g)</div>
       </div>
-      <p><em>For &minus;c<sub>0</sub>t &le; x &le; 2c<sub>0</sub>t</em></p>
-      <p><strong>What it predicts (valid for T &lt; L<sub>0</sub>/c<sub>0</sub>, before reflection):</strong><br>
+      <p><em>for &minus;c<sub>0</sub>t &le; x &le; 2c<sub>0</sub>t</em></p>
+      <p><strong>What it predicts (valid for T &lt; L<sub>0</sub>/c<sub>0</sub>, before reflection off the back wall):</strong><br>
       Front speed 2&radic;(gH) with zero depth. At the gate: h = 4H/9, u = c (Fr = 1), constant discharge q = (8/27)&radic;g &middot; H<sup>1.5</sup>.</p>
     `
   },
   {
     title: "6. REALITY CHECK: FRICTION AND SCALING",
     content: `
+      <p><strong>Average Front Speed v/&radic;(gH), t* > 1</strong><br>
+      Source: Lobovsk&yacute; et al., Table 1. M&amp;M = Martin &amp; Moyce; numbers after names are H in mm.</p>
       <p><strong>Friction (Dressler, Whitham):</strong> Blunt front, vertical tangent, finite depth. Slower than 2&radic;(gH).</p>
       <p><strong>Lab Scale, H = 300 mm:</strong> Re = 3.8e6, We = 1.64e5, Fr = 1. Large We: surface tension negligible.</p>
       <p><strong>Early Times, T* &lt; 1:</strong> Not hydrostatic; gate removal (3.5&ndash;4.5 m/s) matters.</p>
@@ -580,13 +585,25 @@ const slides = [
   {
     title: "7. VALIDATION",
     content: `
+      <table class="table" style="margin: 15px 0; background: white; border: 2px solid var(--ink);">
+        <thead style="background: var(--yellow); color: var(--ink);">
+          <tr><th style="color: var(--ink);">Source</th><th style="color: var(--ink);">Length</th><th style="color: var(--ink);">Time</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Martin &amp; Moyce</td><td>initial width a</td><td>T = t&radic;(g/a)</td></tr>
+          <tr><td>Lobovsk&yacute;</td><td>depth H</td><td>t* = t&radic;(g/H)</td></tr>
+          <tr><td style="font-weight: bold; color: var(--blue);">This solver</td><td style="font-weight: bold; color: var(--blue);">L<sub>0</sub></td><td style="font-weight: bold; color: var(--blue);">T* = t&radic;(g/L<sub>0</sub>)</td></tr>
+        </tbody>
+      </table>
       <p><strong>Early-Time Check (Ritter):</strong> X* = 1 + 2T*. Front starts at x/L<sub>0</sub> = 1, then moves at 2&radic;(gH); square column.</p>
+      <p>Match the axis convention of the data you overlay before comparing curves.</p>
       <div style="border: 2px solid var(--ink); padding: 10px; background: white; margin: 15px 0;">
         <canvas id="deckValChart" width="800" height="250" style="width: 100%; height: 250px;"></canvas>
       </div>
       <p><strong>Acceptance Checks:</strong></p>
       <ul>
         <li>&int;&alpha; dV stays within a stated tolerance (live readout)</li>
+        <li>Front X*(T*) vs Martin &amp; Moyce data</li>
         <li>Front stays below Ritter: 1 + 2T*</li>
         <li>Late front speed about 1.1&ndash;1.75 &radic;(gH)</li>
         <li>&nabla; &middot; u &approx; 0 after every projection</li>
@@ -601,7 +618,8 @@ const slides = [
         <div class="kpi-card__title">Median Peak, 3 mm above bed</div>
         <div style="font-family: var(--font-mono); font-size: 24px;">&approx; 3 &times; &rho;gH</div>
       </div>
-      <p><strong>97.5th percentile &approx; 4.5&times;.</strong> P / &rho;u&sup2; measured 1.25 (vs 0.5 for a steady impinging jet).</p>
+      <p><strong>97.5th percentile &approx; 4.5&times;.</strong></p>
+      <p><strong>P / &rho;V&sup2;, measured:</strong> 1.25 (vs 0.5 for a steady impinging jet).</p>
       <p><strong>Repeated runs per fill height: 100.</strong> Peak pressure is a random variable.</p>
       <p><strong>Time scales:</strong> rise 1.5&ndash;4.5 ms, decay about 10&times; longer. Impulse &int;P dt &approx; &frac12; &times; peak &times; impact time (within about 25%).</p>
       <p><strong>Scaling:</strong> lowest-sensor peak &prop; H (Froude: P ~ &rho;gH); higher sensors are not linear in H.</p>
