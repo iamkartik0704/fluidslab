@@ -43,8 +43,8 @@ const FrontDefHalf = "0.5"
 const AutoPauseTStar = 4.0
 
 // sampleEvery is the upper bound on solver steps between emitted frames; the
-// 30 Hz hub re-clocks whatever lands in the frame pipe.
-const sampleEvery = 64
+// 30 Hz hub re-clocks whatever lands in the frame pipe. Lowered for smoother updates on slow CPUs.
+const sampleEvery = 4
 
 // NewRunner builds a Runner and starts its goroutine with the given params.
 func NewRunner(params ServerParams) *Runner {
@@ -261,6 +261,7 @@ func (r *Runner) loop(params ServerParams) {
 		case "setFrontDef":
 			// Display-only choice; the solver front (0.5 crossing) is always
 			// reported, the 99% curve is computed alongside it.
+			publishFrame() // Push frame so new clients get the initial state on connect
 
 		case "setParams":
 			if cmd.params != nil {
