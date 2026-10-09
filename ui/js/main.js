@@ -486,152 +486,22 @@ connect();
 requestAnimationFrame(loop);
 
 // ================= MODAL LOGIC =================
-const slides = [
-  {
-    title: "1. THEORETICAL FOUNDATION",
-    content: `
-      <p><strong>Problem:</strong> dam break is a two-phase (water + air) flow. A water column is released instantly and collapses under gravity, so the region occupied by water is unknown and changes every step.</p>
-      <div class="kpi-card kpi-card--blue" style="margin: 15px 0; align-items: center;">
-        <div class="kpi-card__title">Navier-Stokes (Momentum, Mixture)</div>
-        <div style="font-family: var(--font-mono); font-size: 24px;">&rho;[&part;u/&part;t + (u&middot;&nabla;)u] = &minus;&nabla;p + &nabla;&middot;[&mu;(&nabla;u + &nabla;u<sup>T</sup>)] + &rho;g</div>
-      </div>
-      <div class="kpi-card kpi-card--yellow" style="margin: 15px 0; align-items: center;">
-        <div class="kpi-card__title">Continuity (Mass)</div>
-        <div style="font-family: var(--font-mono); font-size: 24px;">&nabla; &middot; u = 0</div>
-      </div>
-      <p><strong>Mixture Properties (Linear blend of &alpha;):</strong> &rho; = &alpha;&middot;&rho;<sub>water</sub> + (1&minus;&alpha;)&middot;&rho;<sub>air</sub>, &mu; = &alpha;&middot;&mu;<sub>water</sub> + (1&minus;&alpha;)&middot;&mu;<sub>air</sub><br>
-      <strong>VOF method:</strong> a fixed grid spans both fluids. &alpha; = water volume / cell volume: &alpha; = 1 water, &alpha; = 0 air, 0 &lt; &alpha; &lt; 1 interface cell. &rho; and &mu; are recomputed from &alpha; every step.</p>
-    `
-  },
-  {
-    title: "2. INTERFACE TRANSPORT",
-    content: `
-      <p><strong>&alpha; Transport:</strong> No diffusion, no source.</p>
-      <div class="kpi-card kpi-card--blue" style="margin: 15px 0; align-items: center;">
-        <div class="kpi-card__title">Volume Fraction Transport</div>
-        <div style="font-family: var(--font-mono); font-size: 24px;">&part;&alpha;/&part;t + u&middot;&nabla;&alpha; = 0</div>
-      </div>
-      <p>Equivalent to &part;&alpha;/&part;t + &nabla;&middot;(&alpha;u) = 0 because &nabla;&middot;u = 0 (conservative form).</p>
-    `
-  },
-  {
-    title: "3. TIME STEP: CHORIN PROJECTION",
-    content: `
-      <p><strong>1. Predictor (No Pressure):</strong> u* = u + &Delta;t&middot;[ &minus;(u&middot;&nabla;)u + (1/&rho;)&nabla;&middot;(&mu;&nabla;u) + g ]</p>
-      <div class="kpi-card kpi-card--green" style="margin: 15px 0; align-items: center;">
-        <div class="kpi-card__title">2. Pressure Poisson</div>
-        <div style="font-family: var(--font-mono); font-size: 24px;">&nabla;&middot;((1/&rho;)&nabla;p) = (1/&Delta;t) &nabla;&middot;u*</div>
-      </div>
-      <p><strong>3. Projection:</strong> u(n+1) = u* &minus; (&Delta;t/&rho;)&nabla;p so that &nabla;&middot;u(n+1) = 0</p>
-      <p><strong>4.</strong> Advect &alpha; with the corrected velocity (donor-acceptor), then clip &alpha; to [0, 1].<br>
-      <strong>5.</strong> Recompute &rho; and &mu; from &alpha;; repeat with a CFL-limited &Delta;t.</p>
-      <p><em>Why split?</em> u* is where the water wants to go from gravity, momentum and viscosity alone. The Poisson solve finds the pressure that removes the divergence of u*; the projection applies it.</p>
-    `
-  },
-  {
-    title: "4. DENSITY RATIO AND PRESSURE SOLVE",
-    content: `
-      <p><strong>Why it is ill-conditioned:</strong> The coefficient 1/&rho; jumps ~832&times; across a single interface cell, so the Poisson matrix entries span about three orders of magnitude and plain CG converges slowly.</p>
-      <table class="table" style="margin: 20px 0; background: white; border: 2px solid var(--ink);">
-        <thead style="background: var(--yellow); color: var(--ink);">
-          <tr><th style="color: var(--ink);">Fix: IC(0)-Preconditioned CG</th><th style="color: var(--ink);">CG</th><th style="color: var(--ink);">IC(0)-PCG</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Iterations</td><td>2450</td><td style="font-weight: bold; color: var(--green);">112</td></tr>
-          <tr><td>Time per step (ms)</td><td>18.5</td><td style="font-weight: bold; color: var(--green);">2.1</td></tr>
-          <tr><td>Scaling</td><td>O(N^1.5)</td><td style="font-weight: bold; color: var(--green);">O(N^1.2)</td></tr>
-        </tbody>
-      </table>
-      <p><strong>Matrix assembly:</strong> the 5-point Laplacian must treat fluid and empty cells carefully to stay symmetric positive definite.</p>
-    `
-  },
-  {
-    title: "5. DAM-BREAK THEORY: RITTER",
-    content: `
-      <p><strong>Water at rest (h = H)</strong></p>
-      <p><strong>Shallow Water (Saint-Venant):</strong> h<sub>t</sub> + (h&middot;u)<sub>x</sub> = 0, u<sub>t</sub> + u&middot;u<sub>x</sub> + g&middot;h<sub>x</sub> = 0</p>
-      <div class="kpi-card kpi-card--yellow" style="margin: 15px 0; align-items: center;">
-        <div class="kpi-card__title">Ritter Solution, c0 = &radic;(gH)</div>
-        <div style="font-family: var(--font-mono); font-size: 24px;">u = (2/3)(c0 + x/t)<br>h = (2&middot;c0 &minus; x/t)&sup2; / (9g)</div>
-      </div>
-      <p><em>For &minus;c0&middot;t &le; x &le; 2&middot;c0&middot;t</em></p>
-      <p><strong>What it predicts (valid for T &lt; L0/C0, before reflection):</strong><br>
-      Front speed 2&radic;(gH) with zero depth. At the gate: h = 4H/9, u = c (Fr = 1), constant discharge q = (8/27)&middot;&radic;g&middot;H^1.5.</p>
-    `
-  },
-  {
-    title: "6. REALITY CHECK: FRICTION AND SCALING",
-    content: `
-      <p><strong>Friction (Dressler, Whitham):</strong> Blunt front, vertical tangent, finite depth. Slower than 2&radic;(gH).</p>
-      <p><strong>Lab Scale, H = 300 mm:</strong> Re = 3.8e6, We = 1.64e5, Fr = 1. Large We: surface tension negligible.</p>
-      <p><strong>Early Times, T* &lt; 1:</strong> Not hydrostatic; gate removal (3.5&ndash;4.5 m/s) matters.</p>
-    `
-  },
-  {
-    title: "7. VALIDATION",
-    content: `
-      <p><strong>Early-Time Check (Ritter):</strong> X* = 1 + 2&middot;T*. Front starts at x/L0 = 1, then moves at 2&radic;(gH); square column.</p>
-      <div style="border: 2px solid var(--ink); padding: 10px; background: white; margin: 15px 0;">
-        <canvas id="deckValChart" width="800" height="250" style="width: 100%; height: 250px;"></canvas>
-      </div>
-      <p><strong>Acceptance Checks:</strong></p>
-      <ul>
-        <li>&int;&alpha; dV stays within a stated tolerance (live readout)</li>
-        <li>Front stays below Ritter: 1 + 2T*</li>
-        <li>Late front speed about 1.1&ndash;1.75 &radic;(gH)</li>
-        <li>&nabla;&middot;u &approx; 0 after every projection</li>
-        <li>Error shrinks under grid and &Delta;t refinement</li>
-      </ul>
-    `
-  },
-  {
-    title: "8. IMPACT PRESSURE AT A WALL",
-    content: `
-      <div class="kpi-card kpi-card--green" style="margin: 15px 0; align-items: center;">
-        <div class="kpi-card__title">Median Peak, 3 mm above bed</div>
-        <div style="font-family: var(--font-mono); font-size: 24px;">&approx; 3 &times; &rho;gH</div>
-      </div>
-      <p>97.5th percentile &approx; 4.5&times;. P / &rho;u&sup2; measured 1.25 (vs 0.5 for a steady impinging jet).</p>
-      <p>Repeated runs per fill height: 100. Peak pressure is a random variable.</p>
-      <p>Time scales: rise 1.5&ndash;4.5 ms, decay about 10&times; longer. Impulse &int;P dt &approx; &frac12; &times; peak &times; impact time (within about 25%).</p>
-      <p>Scaling: lowest-sensor peak &prop; H (Froude: P ~ &rho;gH); higher sensors are not linear in H.</p>
-      <p><em>For your solver:</em> incompressible VOF gives a sharp, grid-dependent spike. Compare arrival time and impulse with the median and 95% band, not one peak.</p>
-    `
-  },
-  {
-    title: "9. SCOPE FOR IMPROVEMENT",
-    content: `
-      <p><strong>Higher-Order Interface Tracking:</strong> Replace donor-acceptor with PLIC for a continuous, sharp geometric interface reconstruction.</p>
-      <p><strong>Hardware Acceleration:</strong> Port grid sweeps and the Poisson solver to WebGPU compute shaders; scale to millions of cells and 3D.</p>
-      <p><strong>Physics Gaps:</strong> Air compressibility and entrapment at impact, wet-bed jets, and turbulence at Re ~ 1e6 on an under-resolved grid.</p>
-      <p><strong>3D Effects:</strong> The lab flow stops being 2D at H = 600 mm, which a 2D solver cannot show.</p>
-    `
-  }
-];
 
-let currentSlide = 0;
+
 function renderDeck() {
   $("modalTitle").textContent = "DECK";
   $("modalActions").innerHTML = `
-    <span style="margin-right: 20px; font-family: var(--font-mono); font-size: 14px;">${currentSlide + 1} / ${slides.length}</span>
-    <button id="prevSlide" class="btn btn--ghost">← PREV</button>
-    <button id="nextSlide" class="btn btn--accent">NEXT →</button>
+    <a href="/deck.pptx" download class="btn btn--ghost">DOWNLOAD PPT</a>
+    <button class="btn btn--accent" onclick="document.getElementById('modalOverlay').classList.add('hidden')">CLOSE</button>
   `;
   $("modalContent").innerHTML = `
-    <div class="deck-slide">
-      <div class="deck-slide__title">${slides[currentSlide].title}</div>
-      <div class="deck-slide__content">${slides[currentSlide].content}</div>
+    <div style="width: 100%; height: 100%; min-height: 500px;">
+      <iframe src="https://view.officeapps.live.com/op/embed.aspx?src=https://dambreak.onrender.com/deck.pptx" width="100%" height="100%" frameborder="0">
+        This is an embedded <a target="_blank" href="http://office.com">Microsoft Office</a> presentation, powered by <a target="_blank" href="http://office.com/webapps">Office Online</a>.
+      </iframe>
     </div>
   `;
-  
-  $("prevSlide").onclick = () => { if (currentSlide > 0) { currentSlide--; renderDeck(); } };
-  $("nextSlide").onclick = () => { if (currentSlide < slides.length - 1) { currentSlide++; renderDeck(); } };
   $("modalOverlay").classList.remove("hidden");
-  
-  // If we are on the Validation slide, draw the graph!
-  if (currentSlide === 6 && $("deckValChart")) {
-    drawValidationChart($("deckValChart"), 800, 250);
-  }
 }
 
 function drawValidationChart(canvasEl, w, h) {
@@ -774,6 +644,6 @@ function renderValidation() {
 }
 
 $("modalClose").onclick = () => { $("modalOverlay").classList.add("hidden"); };
-$("deckBtn").onclick = () => { currentSlide = 0; renderDeck(); };
+$("deckBtn").onclick = () => { renderDeck(); };
 $("validBtn").onclick = () => { renderValidation(); };
 
