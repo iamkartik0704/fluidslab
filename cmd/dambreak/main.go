@@ -105,15 +105,11 @@ func runServe(port int, noBrowser bool) {
 	}
 	url := fmt.Sprintf("http://localhost:%d/", ln.Addr().(*net.TCPAddr).Port)
 
-	r := server.NewRunner(server.DefaultParams())
-	h, err := server.NewHub(r)
+	h, err := server.NewHub()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "hub:", err)
 		os.Exit(1)
 	}
-
-	stop := make(chan struct{})
-	go h.Run(stop)
 
 	fmt.Printf("dam break UI: %s\n", url)
 	if !noBrowser {

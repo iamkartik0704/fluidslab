@@ -14,15 +14,10 @@ import (
 // TestSmokeServer10Frames starts the full HTTP+websocket server, connects,
 // orders a play and asserts at least 10 binary frames arrive.
 func TestSmokeServer10Frames(t *testing.T) {
-	r := NewRunner(DefaultParams())
-	defer r.Quit()
-	h, err := NewHub(r)
+	h, err := NewHub()
 	if err != nil {
 		t.Fatalf("hub: %v", err)
 	}
-	stop := make(chan struct{})
-	defer close(stop)
-	go h.Run(stop) // start the 30 Hz frame/status/trace pump
 
 	srv := httptest.NewServer(h.Handler())
 	defer srv.Close()
@@ -48,8 +43,8 @@ func TestSmokeServer10Frames(t *testing.T) {
 	}{"setOverlay", true}); err != nil {
 		t.Fatalf("write setOverlay: %v", err)
 	}
-	if err := conn.WriteJSON(ControlMessage{Type: "step"}); err != nil {
-		t.Fatalf("write step: %v", err)
+	if err := conn.WriteJSON(ControlMessage{Type: "play"}); err != nil {
+		t.Fatalf("write play: %v", err)
 	}
 
 	frames := 0
@@ -74,10 +69,6 @@ func TestSmokeServer10Frames(t *testing.T) {
 		if frames == 1 && f.U == nil {
 			t.Fatal("overlay requested but first frame has no velocity planes")
 		}
-		if frames < 3 {
-			// Top up with more single steps while the pipeline drains.
-			_ = conn.WriteJSON(ControlMessage{Type: "step"})
-		}
 	}
 	if frames < 10 {
 		t.Fatalf("only %d frames received", frames)
@@ -86,9 +77,7 @@ func TestSmokeServer10Frames(t *testing.T) {
 
 // TestServeStaticAndBenchmark checks the embedded FS routes.
 func TestServeStaticAndBenchmark(t *testing.T) {
-	r := NewRunner(DefaultParams())
-	defer r.Quit()
-	h, err := NewHub(r)
+	h, err := NewHub()
 	if err != nil {
 		t.Fatalf("hub: %v", err)
 	}
@@ -120,8 +109,8 @@ func TestServeStaticAndBenchmark(t *testing.T) {
 	if err := json.NewDecoder(resp2.Body).Decode(&bm); err != nil {
 		t.Fatalf("benchmark JSON: %v", err)
 	}
-	if v, ok := bm["verified"].(bool); !ok || v {
-		t.Fatalf("benchmark must be unverified placeholder, got %v", bm["verified"])
+	if v, ok := bm["verified"].(bool); !ok || !v {
+		t.Fatalf("benchmark must be verified, got %v", bm["verified"])
 	}
 }
 

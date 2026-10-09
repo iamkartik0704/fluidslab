@@ -28,7 +28,6 @@ const traceInterval = time.Second / 2
 
 // Hub owns the HTTP server, the websocket client set and the 30 Hz pump.
 type Hub struct {
-	runner *Runner
 	mux    *http.ServeMux
 	wsUp   websocket.Upgrader
 	bench  *BenchMessage
@@ -43,12 +42,13 @@ type wsClient struct {
 	sendMu  sync.Mutex
 	closed  bool
 	withVel bool
+	runner  *Runner
+	stop    chan struct{}
 }
 
-// NewHub wires the hub with a runner and the embedded static assets.
-func NewHub(r *Runner) (*Hub, error) {
+// NewHub wires the hub with the embedded static assets.
+func NewHub() (*Hub, error) {
 	h := &Hub{
-		runner:  r,
 		mux:     http.NewServeMux(),
 		clients: make(map[*wsClient]bool),
 	}
@@ -97,7 +97,11 @@ func (h *Hub) serveWS(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	c := &wsClient{conn: conn}
+	c := &wsClient{
+		conn:   conn,
+		runner: NewRunner(DefaultParams()),
+		stop:   make(chan struct{}),
+	}
 	h.mu.Lock()
 	h.clients[c] = true
 	h.status.Clients = len(h.clients)
@@ -117,10 +121,11 @@ func (h *Hub) serveWS(w http.ResponseWriter, r *http.Request) {
 		Placeholders:   true,
 	}
 	_ = h.sendJSON(c, hello)
-	_ = h.sendJSON(c, h.seriesMessage())
+	_ = h.sendJSON(c, h.seriesMessage(c.runner))
 	_ = h.sendJSON(c, h.bench)
 
 	go h.readPump(c)
+	go h.clientPump(c)
 }
 
 // readPump consumes client JSON control messages until close.
@@ -139,7 +144,7 @@ func (h *Hub) readPump(c *wsClient) {
 		switch msg.Type {
 		case "play", "pause", "reset", "step", "setFrontDef":
 			select {
-			case h.runner.CmdCh() <- runnerCmd{kind: msg.Type, frontDef: msg.FrontDef}:
+			case c.runner.CmdCh() <- runnerCmd{kind: msg.Type, frontDef: msg.FrontDef}:
 			default:
 				_ = h.sendJSON(c, ErrorMessage{Type: "error", Message: "server busy"})
 			}
@@ -150,7 +155,7 @@ func (h *Hub) readPump(c *wsClient) {
 			}
 			p := msg.Params.Clamp() // validate+clamp server-side before the runner sees it
 			select {
-			case h.runner.CmdCh() <- runnerCmd{kind: "setParams", params: &p}:
+			case c.runner.CmdCh() <- runnerCmd{kind: "setParams", params: &p}:
 			default:
 				_ = h.sendJSON(c, ErrorMessage{Type: "error", Message: "server busy"})
 			}
@@ -175,6 +180,8 @@ func (h *Hub) removeClient(c *wsClient) {
 		c.closed = true
 		delete(h.clients, c)
 		h.status.Clients = len(h.clients)
+		close(c.stop)
+		c.runner.Quit()
 	}
 	h.mu.Unlock()
 	_ = c.conn.Close()
@@ -201,11 +208,8 @@ func (h *Hub) sendBinary(c *wsClient, b []byte) error {
 	return c.conn.WriteMessage(websocket.BinaryMessage, b)
 }
 
-// Run pumps frames at a fixed 30 Hz and statuses at 5 Hz until stop closes.
-// The 30 Hz ticker re-clocks the display: whatever snapshot is newest when the
-// tick fires is what goes out; slow clients get a stale-dropping write, never
-// an unbounded queue.
-func (h *Hub) Run(stop <-chan struct{}) {
+// clientPump pumps frames at a fixed 30 Hz and statuses at 5 Hz for a single client.
+func (h *Hub) clientPump(c *wsClient) {
 	frameTick := time.NewTicker(frameInterval)
 	statusTick := time.NewTicker(statusInterval)
 	traceTick := time.NewTicker(traceInterval)
@@ -221,10 +225,10 @@ func (h *Hub) Run(stop <-chan struct{}) {
 	
 	for {
 		select {
-		case <-stop:
+		case <-c.stop:
 			return
 
-		case snap := <-h.runner.Frames():
+		case snap := <-c.runner.Frames():
 			latest = &snapshotBox{snap: snap}
 			stepMark, tSimMark = snap.Step, snap.Time
 
@@ -232,30 +236,20 @@ func (h *Hub) Run(stop <-chan struct{}) {
 			if latest == nil {
 				continue
 			}
-			h.mu.Lock()
-			targets := make([]*wsClient, 0, len(h.clients))
-			anyVel := false
-			for c := range h.clients {
-				if c.withVel {
-					anyVel = true
-				}
-				targets = append(targets, c)
-			}
-			h.mu.Unlock()
+			
+			c.sendMu.Lock()
+			withVel := c.withVel
+			c.sendMu.Unlock()
 
 			base := EncodeFrame(frameID.Add(1), latest.snap, false)
-			var vel []byte
-			if anyVel {
-				vel = EncodeFrame(frameID.Add(1), latest.snap, true)
+			payload := base
+			if withVel {
+				payload = EncodeFrame(frameID.Load(), latest.snap, true)
 			}
-			for _, c := range targets {
-				payload := base
-				if c.withVel && vel != nil {
-					payload = vel
-				}
-				if err := h.sendBinary(c, payload); err != nil {
-					h.removeClient(c)
-				}
+			
+			if err := h.sendBinary(c, payload); err != nil {
+				h.removeClient(c)
+				return
 			}
 			latest = nil // DO NOT RE-SEND THE SAME FRAME FOREVER
 
@@ -264,24 +258,33 @@ func (h *Hub) Run(stop <-chan struct{}) {
 			st := h.status
 			h.mu.Unlock()
 			st.Type = "status"
-			st.Running = h.runner.LastRunning()
+			st.Running = c.runner.LastRunning()
 			st.StepsPerSec, st.SlowFactor = meter.rates(stepMark, tSimMark, time.Now())
 			st.Clients = h.clientCount()
-			st.LastErr = h.runner.LastError()
-			st.AutoPaused = h.runner.AutoPaused()
-			h.broadcastJSON(st)
+			st.LastErr = c.runner.LastError()
+			st.AutoPaused = c.runner.AutoPaused()
+			if err := h.sendJSON(c, st); err != nil {
+				h.removeClient(c)
+				return
+			}
 
-		case st := <-h.runner.Statuses():
-			h.broadcastJSON(st)
+		case st := <-c.runner.Statuses():
+			if err := h.sendJSON(c, st); err != nil {
+				h.removeClient(c)
+				return
+			}
 
 		case <-traceTick.C:
 			msg := SeriesMessage{
 				Type:      "trace",
-				Runs:      h.runner.ArchivedRuns(),
-				Points:    h.runner.LiveTrace(),
-				TimeScale: h.runner.CurrentTimeScale(),
+				Runs:      c.runner.ArchivedRuns(),
+				Points:    c.runner.LiveTrace(),
+				TimeScale: c.runner.CurrentTimeScale(),
 			}
-			h.broadcastJSON(msg)
+			if err := h.sendJSON(c, msg); err != nil {
+				h.removeClient(c)
+				return
+			}
 		}
 	}
 }
@@ -328,11 +331,11 @@ func (h *Hub) clientCount() int {
 }
 
 // seriesMessage assembles archived runs for a new client.
-func (h *Hub) seriesMessage() SeriesMessage {
+func (h *Hub) seriesMessage(r *Runner) SeriesMessage {
 	return SeriesMessage{
 		Type:      "series",
-		Runs:      h.runner.ArchivedRuns(),
-		TimeScale: h.runner.CurrentTimeScale(),
+		Runs:      r.ArchivedRuns(),
+		TimeScale: r.CurrentTimeScale(),
 	}
 }
 
