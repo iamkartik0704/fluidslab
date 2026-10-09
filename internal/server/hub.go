@@ -188,6 +188,7 @@ func (h *Hub) sendJSON(c *wsClient, v any) error {
 	}
 	c.sendMu.Lock()
 	defer c.sendMu.Unlock()
+	_ = c.conn.SetWriteDeadline(time.Now().Add(250 * time.Millisecond))
 	return c.conn.WriteMessage(websocket.TextMessage, b)
 }
 
