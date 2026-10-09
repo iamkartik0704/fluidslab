@@ -215,8 +215,9 @@ func (h *Hub) Run(stop <-chan struct{}) {
 	var latest *snapshotBox
 	var frameID atomic.Uint32
 	var meter rateMeter
-	stepMark, tSimMark := 0, 0.0
-
+	var stepMark int
+	var tSimMark float64
+	
 	for {
 		select {
 		case <-stop:
@@ -224,12 +225,12 @@ func (h *Hub) Run(stop <-chan struct{}) {
 
 		case snap := <-h.runner.Frames():
 			latest = &snapshotBox{snap: snap}
+			stepMark, tSimMark = snap.Step, snap.Time
 
 		case <-frameTick.C:
 			if latest == nil {
 				continue
 			}
-			stepMark, tSimMark = latest.snap.Step, latest.snap.Time
 			h.mu.Lock()
 			targets := make([]*wsClient, 0, len(h.clients))
 			anyVel := false

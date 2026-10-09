@@ -44,7 +44,7 @@ const AutoPauseTStar = 4.0
 
 // sampleEvery is the upper bound on solver steps between emitted frames; the
 // 30 Hz hub re-clocks whatever lands in the frame pipe. Lowered for smoother updates on slow CPUs.
-const sampleEvery = 4
+const sampleEvery = 1
 
 // NewRunner builds a Runner and starts its goroutine with the given params.
 func NewRunner(params ServerParams) *Runner {
