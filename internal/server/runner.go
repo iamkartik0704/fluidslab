@@ -329,9 +329,7 @@ func buildSim(p ServerParams) *solver.Simulation {
 	case "first-order":
 		cfg.Numerical.AdvectScheme = solver.AdvectUpwind
 		cfg.Numerical.SecondOrderAdvect = false
-	case "van leer":
-		cfg.Numerical.AdvectScheme = solver.AdvectDonorAcceptor
-		cfg.Numerical.SecondOrderAdvect = true
+
 	default: // "donor-acceptor"
 		cfg.Numerical.AdvectScheme = solver.AdvectDonorAcceptor
 		cfg.Numerical.SecondOrderAdvect = false

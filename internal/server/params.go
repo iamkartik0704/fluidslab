@@ -11,7 +11,7 @@ type ServerParams struct {
 	ViscosityScale float64 `json:"viscosityScale"` // multiplier on water viscosity
 	DensityRatio   float64 `json:"densityRatio"`   // rho_water / rho_air
 	FreeSlip       bool    `json:"freeSlip"`       // rendered but DISABLED in the UI (solver issue under investigation)
-	Scheme         string  `json:"scheme"`         // "first-order" | "donor-acceptor" | "van leer"
+	Scheme         string  `json:"scheme"`         // "first-order" | "donor-acceptor"
 }
 
 // DefaultParams returns the defaults the prompt mandates: aspect ratio 2,
@@ -37,7 +37,7 @@ var ValidatedRanges = map[string][2]float64{
 }
 
 // SchemeNames lists the advection schemes offered in the UI, in order.
-var SchemeNames = []string{"first-order", "donor-acceptor", "van leer"}
+var SchemeNames = []string{"first-order", "donor-acceptor"}
 
 
 // Clamp returns a copy of p forced into the validated envelope:
