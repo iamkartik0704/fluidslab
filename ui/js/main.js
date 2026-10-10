@@ -156,7 +156,8 @@ function handleFrame(u8) {
 
   lastFrame = { nx, ny, step, t, tStar, diags, alpha, u: null, v: null, hasVel: (flags & 1) !== 0 };
   if (lastFrame.hasVel) {
-    const f32 = new Float32Array(u8.buffer, u8.byteOffset + HDR + n, 2 * n);
+    const velBytes = u8.slice(HDR + n);
+    const f32 = new Float32Array(velBytes.buffer, velBytes.byteOffset, 2 * n);
     lastFrame.u = f32.slice(0, n);
     lastFrame.v = f32.slice(n, 2 * n);
   }
