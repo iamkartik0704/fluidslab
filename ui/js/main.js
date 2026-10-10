@@ -111,7 +111,7 @@ function setErr(msg) {
 function applyStatus(st) {
   const slow = st.slowMotionFactor > 0 ? st.slowMotionFactor.toFixed(1) + "× WALL/SIM" : "–";
   // $("dSlow").textContent = slow;
-  $("slowRow").textContent = slow;
+  // $("slowRow").textContent = slow;
 
   // Toggle play/pause button state
   if (st.running !== undefined) {
@@ -324,7 +324,7 @@ function fpsTick(now) {
     fpsCount = 0;
     fpsLast = now;
     $("hudFps").textContent = "FPS " + fpsVal;
-    $("sbFpsText").textContent = "FPS " + fpsVal;
+    // $("sbFpsText").textContent = "FPS " + fpsVal;
   }
 }
 
