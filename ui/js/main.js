@@ -82,7 +82,7 @@ function handleJSON(m) {
     case "trace":
       if (m.runs) series.runs = m.runs;
       if (m.points) liveTrace = m.points;
-      if (m.timeScale) series.timeScale = m.timeScale;
+
       drawPlot();
       break;
     case "status":
@@ -403,8 +403,7 @@ function drawPlot() {
     leg.appendChild(c);
   });
 
-  const tsName = (hello && hello.params && hello.params.timeScale) || "√(2g/L0)";
-  $("plotTimeScale").textContent = "t* CONVENTION: " + tsName.toUpperCase() + " · FRONT DEF: " +
+  $("plotTimeScale").textContent = "t* CONVENTION: √(G/L0) · FRONT DEF: " +
     (frontDef === "0.99" ? "99% CUMULATIVE α" : "α = 0.5 CROSSING");
 }
 
@@ -420,7 +419,7 @@ function syncControlsFromParams() {
   $("densSlider").value = params.densityRatio;
   $("densOut").textContent = String(Math.round(params.densityRatio));
   $("schemeSelect").value = params.scheme;
-  $("timeScaleSelect").value = params.timeScale;
+
 }
 
 function formatSci(v) {
@@ -436,7 +435,7 @@ function currentParams() {
     densityRatio: parseFloat($("densSlider").value),
     freeSlip: false,
     scheme: $("schemeSelect").value,
-    timeScale: $("timeScaleSelect").value,
+
   };
 }
 
@@ -458,7 +457,7 @@ function wireControls() {
   $("densSlider").oninput = () => { $("densOut").textContent = $("densSlider").value; };
   $("densSlider").onchange = pushParams;
   $("schemeSelect").onchange = pushParams;
-  $("timeScaleSelect").onchange = pushParams;
+
 
   $("overlayToggle").onchange = () => {
     overlayOn = $("overlayToggle").checked;

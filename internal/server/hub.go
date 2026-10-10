@@ -113,7 +113,7 @@ func (h *Hub) serveWS(w http.ResponseWriter, r *http.Request) {
 		Params:         DefaultParams(),
 		ValidatedRng:   ValidatedRanges,
 		Schemes:        SchemeNames,
-		TimeScales:     TimeScaleNames,
+
 		FrontDefs:      []string{FrontDefHalf, FrontDef99},
 		FrontDef:       FrontDefHalf,
 		FreeSlipAvail:  false, // toggle rendered but disabled in the UI
@@ -279,7 +279,7 @@ func (h *Hub) clientPump(c *wsClient) {
 				Type:      "trace",
 				Runs:      c.runner.ArchivedRuns(),
 				Points:    c.runner.LiveTrace(),
-				TimeScale: c.runner.CurrentTimeScale(),
+
 			}
 			if err := h.sendJSON(c, msg); err != nil {
 				h.removeClient(c)
@@ -335,7 +335,7 @@ func (h *Hub) seriesMessage(r *Runner) SeriesMessage {
 	return SeriesMessage{
 		Type:      "series",
 		Runs:      r.ArchivedRuns(),
-		TimeScale: r.CurrentTimeScale(),
+
 	}
 }
 
@@ -364,7 +364,7 @@ func loadBenchmark() (*BenchMessage, error) {
 	var file struct {
 		Entries []struct {
 			Verified  bool   `json:"verified"`
-			TimeScale string `json:"timeScale"`
+
 			Points    []struct {
 				T float64 `json:"t"`
 				X float64 `json:"x"`
@@ -382,7 +382,7 @@ func loadBenchmark() (*BenchMessage, error) {
 		Type:      "benchmark",
 		Verified:  e.Verified,
 		Label:     "Martin & Moyce (1952)",
-		TimeScale: e.TimeScale,
+
 	}
 	for _, p := range e.Points {
 		msg.Points = append(msg.Points, BenchPoint{T: p.T, X: p.X})

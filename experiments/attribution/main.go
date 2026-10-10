@@ -69,7 +69,7 @@ func runSimAttr(cellsPerL0 int, freeSlip, vanLeer bool, rhoRatio float64, halfDt
 	cfg.Numerical.SecondOrderAdvect = vanLeer
 	cfg.Numerical.SplitDivFix = true
 	cfg.Numerical.ClipRedistribute = true
-	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0 
+
 	
 	if halfDt {
 		cfg.Numerical.MaxDT = 0.5 * cfg.Numerical.MaxDT

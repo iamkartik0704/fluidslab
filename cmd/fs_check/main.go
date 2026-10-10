@@ -40,7 +40,7 @@ func runFS() {
 	cfg.Numerical.SecondOrderAdvect = false
 	cfg.Numerical.ClipRedistribute = true
 	cfg.Numerical.SplitDivFix = true
-	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
+
 
 	// Open top
 	sim := solver.NewSimulation(cfg, nx, ny, width, height, false)

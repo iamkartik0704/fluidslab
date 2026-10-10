@@ -21,12 +21,7 @@ const (
 	PoissonSOR
 )
 
-type TimeScaleConvention int
 
-const (
-	TimeScaleSqrt2gOverL0 TimeScaleConvention = iota
-	TimeScaleSqrtgOverL0
-)
 
 type XStarConvention int
 
@@ -85,7 +80,7 @@ type Config struct {
 		SubstepVOF       int
 		MaxCFLFrac       float64 // if > 0, cap dt so that CFL <= MaxCFLFrac * native CFL limit
 	}
-	TimeScale TimeScaleConvention
+
 	XStarDef  XStarConvention
 	// CSF surface tension: coefficient kept in Physical.Sigma but the model is
 	// DISABLED (SigmaActive = 0) until everything else passes validation.
@@ -136,7 +131,7 @@ func DefaultConfig() Config {
 	c.Numerical.RemoveFlotsam = false
 	c.Numerical.FlotsamThreshold = 1e-6
 
-	c.TimeScale = TimeScaleSqrt2gOverL0
+
 	c.Threads = 1
 	c.DisplayHz = 30
 

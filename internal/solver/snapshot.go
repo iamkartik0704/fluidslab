@@ -28,8 +28,7 @@ type Snapshot struct {
 	PoissonIter     int
 	PoissonResidual float64
 
-	// Time-scaling convention actually in force, for axis labels.
-	TimeScale string
+
 
 	// Alpha holds the INTERIOR cell-centred volume fractions, row-major with
 	// row 0 = top of the domain (j = Ny) for direct top-down display.
@@ -68,7 +67,7 @@ func (s *Simulation) Snapshot() *Snapshot {
 		PoissonResidual: s.State.PoissonResidual,
 		FrontX:          s.State.FrontX,
 		FrontXStar:      s.State.FrontXStar,
-		TimeScale:       timeScaleName(s.Cfg.TimeScale),
+
 	}
 	if sn.RefVolume > 0 {
 		sn.VolumeDriftPct = 100 * (sn.Volume - sn.RefVolume) / sn.RefVolume
@@ -105,10 +104,3 @@ func (s *Simulation) Snapshot() *Snapshot {
 	return sn
 }
 
-// timeScaleName returns the axis-label string for a time-scale convention.
-func timeScaleName(c TimeScaleConvention) string {
-	if c == TimeScaleSqrtgOverL0 {
-		return "t* = t·sqrt(g/L0)"
-	}
-	return "t* = t·sqrt(2g/L0)"
-}

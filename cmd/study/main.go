@@ -119,7 +119,7 @@ func runSim(name string, cellsPerL0 int, dtScale float64, subMom, subVOF int, cf
 		cfg.Numerical.MaxCFLFrac = cflFrac
 	}
 
-	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
+
 
 	sim := solver.NewSimulation(cfg, nx, ny, width, height, false)
 	sim.InitDamBreak()
@@ -427,7 +427,7 @@ func main() {
 		cfgLocal.Numerical.SecondOrderAdvect = true
 		cfgLocal.Numerical.SplitDivFix = true
 		cfgLocal.Numerical.ClipRedistribute = false
-		cfgLocal.TimeScale = solver.TimeScaleSqrt2gOverL0
+
 
 		sim := solver.NewSimulation(cfgLocal, cfgLocal.Domain.Nx, cfgLocal.Domain.Ny, width, 4.0*L0, false)
 		sim.InitDamBreak()

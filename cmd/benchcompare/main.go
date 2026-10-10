@@ -140,7 +140,7 @@ func runSim(cellsPerL0 int, freeSlip, vanLeer bool) RunResult {
 	cfg.Numerical.SplitDivFix = true
 	cfg.Numerical.ClipRedistribute = true
 	// Part B.2: T = t * sqrt(2g/L0) for H0=2L0
-	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0 
+
 	
 	sim := solver.NewSimulation(cfg, nx, ny, width, height, false)
 	sim.InitDamBreak()

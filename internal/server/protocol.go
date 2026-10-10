@@ -200,7 +200,7 @@ type HelloMessage struct {
 	Params         ServerParams          `json:"params"`
 	ValidatedRng   map[string][2]float64 `json:"validatedRanges"`
 	Schemes        []string              `json:"schemes"`
-	TimeScales     []string              `json:"timeScales"`
+
 	FrontDefs      []string              `json:"frontDefs"`
 	FrontDef       string                `json:"frontDef"`
 	FreeSlipAvail  bool                  `json:"freeSlipAvailable"`
@@ -242,7 +242,7 @@ type SeriesMessage struct {
 	Type      string       `json:"type"`
 	Runs      []SeriesRun  `json:"runs"`
 	Points    []TracePoint `json:"points,omitempty"`
-	TimeScale string       `json:"timeScale"`
+
 }
 
 // BenchMessage carries the Martin & Moyce comparison data.
@@ -250,7 +250,7 @@ type BenchMessage struct {
 	Type      string       `json:"type"`
 	Verified  bool         `json:"verified"`
 	Label     string       `json:"label"`
-	TimeScale string       `json:"timeScale"`
+
 	Points    []BenchPoint `json:"points"`
 }
 

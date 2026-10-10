@@ -10,7 +10,7 @@ func TestClampParams(t *testing.T) {
 		DensityRatio:   -5,   // -> 1
 		FreeSlip:       true, // stays true in params; UI/server keeps it off by policy
 		Scheme:         "bogus",
-		TimeScale:      "",
+
 	}
 	got := in.Clamp()
 	if got.AspectRatio != 4.0 {
@@ -28,9 +28,7 @@ func TestClampParams(t *testing.T) {
 	if got.Scheme != "donor-acceptor" {
 		t.Errorf("scheme: got %q", got.Scheme)
 	}
-	if got.TimeScale != "sqrt(2g/L0)" {
-		t.Errorf("timescale: got %q", got.TimeScale)
-	}
+
 
 	// Cells ladder snap: <12->8, <20->16, <28->24, else 32.
 	for _, tc := range []struct{ in, want int }{{7, 8}, {8, 8}, {12, 16}, {19, 16}, {20, 24}, {27, 24}, {28, 32}, {100, 32}} {

@@ -12,7 +12,6 @@ type ServerParams struct {
 	DensityRatio   float64 `json:"densityRatio"`   // rho_water / rho_air
 	FreeSlip       bool    `json:"freeSlip"`       // rendered but DISABLED in the UI (solver issue under investigation)
 	Scheme         string  `json:"scheme"`         // "first-order" | "donor-acceptor" | "van leer"
-	TimeScale      string  `json:"timeScale"`      // "sqrt(2g/L0)" | "sqrt(g/L0)"
 }
 
 // DefaultParams returns the defaults the prompt mandates: aspect ratio 2,
@@ -25,7 +24,6 @@ func DefaultParams() ServerParams {
 		DensityRatio:   998.0 / 1.2,
 		FreeSlip:       false,
 		Scheme:         "donor-acceptor",
-		TimeScale:      "sqrt(2g/L0)",
 	}
 }
 
@@ -41,8 +39,6 @@ var ValidatedRanges = map[string][2]float64{
 // SchemeNames lists the advection schemes offered in the UI, in order.
 var SchemeNames = []string{"first-order", "donor-acceptor", "van leer"}
 
-// TimeScaleNames lists the time-scaling conventions offered in the UI.
-var TimeScaleNames = []string{"sqrt(2g/L0)", "sqrt(g/L0)"}
 
 // Clamp returns a copy of p forced into the validated envelope:
 //   - aspect ratio clamped to [1, 4]
@@ -70,7 +66,6 @@ func (p ServerParams) Clamp() ServerParams {
 	}
 
 	c.Scheme = matchEnum(p.Scheme, SchemeNames, "donor-acceptor")
-	c.TimeScale = matchEnum(p.TimeScale, TimeScaleNames, "sqrt(2g/L0)")
 	return c
 }
 

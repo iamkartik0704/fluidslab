@@ -53,7 +53,7 @@ func runFS(name string, vanLeer bool) {
 	cfg.Numerical.SecondOrderAdvect = vanLeer
 	cfg.Numerical.ClipRedistribute = true
 	cfg.Numerical.SplitDivFix = true
-	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
+
 
 	sim := solver.NewSimulation(cfg, nx, ny, width, height, false)
 	sim.InitDamBreak()

@@ -111,7 +111,7 @@ func runSimAttr(name string, cellsPerL0 int, freeSlip, vanLeer bool, dtScale flo
 	cfg.Numerical.SubstepMom = subMom
 	cfg.Numerical.SubstepVOF = subVOF
 
-	cfg.TimeScale = solver.TimeScaleSqrt2gOverL0 
+
 	
 	sim := solver.NewSimulation(cfg, nx, ny, width, height, false)
 	sim.InitDamBreak()

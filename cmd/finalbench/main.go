@@ -105,7 +105,7 @@ func main() {
 		dx := L0 / float64(n)
 
 		sim := solver.NewSimulation(cfg, nx, ny, float64(nx)*dx, float64(ny)*dx, false)
-		cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
+
 		sim.InitDamBreak()
 		solver.ApplyAlphaBC(sim.Grid, sim.Fields)
 		

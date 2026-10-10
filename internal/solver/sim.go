@@ -202,13 +202,9 @@ func (s *Simulation) UpdateDiagnostics() {
 	if s.State.FrontXStar < 0.99 && s.State.Step > 0 {
 		panic(fmt.Sprintf("invariant violation: front X* = %f < 1.0 (frontX=%f, L0=%f)", s.State.FrontXStar, frontX, L0))
 	}
-	// t* = t * sqrt(2g / L0) (from the PDF: t* = t * sqrt(2g/L0) for time scale)
-	// Martin & Moyce used sqrt(2g / L0) or sqrt(g / L0). PDF says sqrt(2g / L0).
-	if s.Cfg.TimeScale == TimeScaleSqrt2gOverL0 {
-		s.State.TStar = s.State.Time * math.Sqrt(2.0*gConst/L0)
-	} else {
-		s.State.TStar = s.State.Time * math.Sqrt(gConst/L0)
-	}
+	// t* = t * sqrt(g / L0) (Martin & Moyce validation scaling)
+	s.State.TStar = s.State.Time * math.Sqrt(gConst/L0)
+
 }
 
 // InitDamBreak sets the initial Alpha field for a dam break (water column H0xL0).

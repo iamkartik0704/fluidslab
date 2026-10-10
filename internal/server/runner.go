@@ -22,7 +22,7 @@ type Runner struct {
 	lastErr    string
 	autoPaused bool
 	running    bool
-	timeScale  string
+
 }
 
 type runnerCmd struct {
@@ -122,12 +122,6 @@ func (r *Runner) LastRunning() bool {
 	return r.running
 }
 
-// CurrentTimeScale returns the configured time-scaling convention label.
-func (r *Runner) CurrentTimeScale() string {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-	return r.timeScale
-}
 
 func (r *Runner) loop(params ServerParams) {
 	sim := buildSim(params)
@@ -141,12 +135,6 @@ func (r *Runner) loop(params ServerParams) {
 		r.running = v
 		r.mu.Unlock()
 	}
-	setTimeScale := func(ts string) {
-		r.mu.Lock()
-		r.timeScale = ts
-		r.mu.Unlock()
-	}
-	setTimeScale(params.TimeScale)
 
 	// nextCmd returns the next command, preferring locally queued ones.
 	nextCmd := func() (runnerCmd, bool) {
@@ -349,12 +337,6 @@ func buildSim(p ServerParams) *solver.Simulation {
 		cfg.Numerical.SecondOrderAdvect = false
 	}
 
-	switch p.TimeScale {
-	case "sqrt(g/L0)":
-		cfg.TimeScale = solver.TimeScaleSqrtgOverL0
-	default:
-		cfg.TimeScale = solver.TimeScaleSqrt2gOverL0
-	}
 
 	cfg.Numerical.FreeSlip = p.FreeSlip
 	cfg.Numerical.OpenTop = true
