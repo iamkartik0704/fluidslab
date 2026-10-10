@@ -110,7 +110,7 @@ function setErr(msg) {
 
 function applyStatus(st) {
   const slow = st.slowMotionFactor > 0 ? st.slowMotionFactor.toFixed(1) + "× WALL/SIM" : "–";
-  $("dSlow").textContent = slow;
+  // $("dSlow").textContent = slow;
   $("slowRow").textContent = slow;
 
   // Toggle play/pause button state
