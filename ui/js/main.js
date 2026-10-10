@@ -631,188 +631,61 @@ const slides = [
   {
     title: "1. THEORETICAL FOUNDATION",
     content: `
-      <p><strong>Problem:</strong> dam break is a two-phase (water + air) flow. A water column is released instantly and collapses under gravity, so the region occupied by water is unknown and changes every step.</p>
-      <div class="kpi-card kpi-card--blue" style="margin: 15px 0; align-items: center;">
-        <div class="kpi-card__title">Navier-Stokes (Momentum, Mixture)</div>
-        <div style="font-family: var(--font-mono); font-size: 24px;">&rho;[&part;u/&part;t + (u &middot; &nabla;)u] = &minus;&nabla;p + &nabla; &middot; [&mu;(&nabla;u + &nabla;u<sup>T</sup>)] + &rho;g</div>
-      </div>
-      <div class="kpi-card kpi-card--yellow" style="margin: 15px 0; align-items: center;">
-        <div class="kpi-card__title">Continuity (Mass)</div>
-        <div style="font-family: var(--font-mono); font-size: 24px;">&nabla; &middot; u = 0</div>
-      </div>
-      <p><strong>Mixture Properties (Linear blend of &alpha;):</strong> &rho; = &alpha;&middot;&rho;<sub>water</sub> + (1&minus;&alpha;)&middot;&rho;<sub>air</sub>, &mu; = &alpha;&middot;&mu;<sub>water</sub> + (1&minus;&alpha;)&middot;&mu;<sub>air</sub></p>
-      <p><strong>VOF method:</strong> a fixed grid spans both fluids. &alpha; = water volume / cell volume: &alpha; = 1 water, &alpha; = 0 air, 0 &lt; &alpha; &lt; 1 interface cell. &rho; and &mu; are recomputed from &alpha; every step.</p>
+      <p><strong>Problem:</strong> dam break is a two-phase (water + air) flow. A water column is released instantly and collapses under gravity, so the region occupied by water is unknown and changes every step.</p><div class="kpi-card kpi-card--blue" style="margin: 15px 0; align-items: center; text-align: center; justify-content: center;  "><div class="kpi-card__title">Navier-Stokes (Momentum, Mixture)</div><div style="font-family: var(--font-mono); font-size: 22px; font-weight: normal; line-height: 1.35; ">&rho;[&part;u/&part;t + (u &middot; &nabla;)u] = &minus;&nabla;p + &nabla; &middot; [&mu;(&nabla;u + &nabla;u<sup>T</sup>)] + &rho;g</div></div><div style="display: grid; grid-template-columns: 1fr 2fr; gap: 18px; margin: 15px 0; "><div class="kpi-card kpi-card--yellow" style="margin: 0; align-items: center; text-align: center; justify-content: center;  "><div class="kpi-card__title">Continuity (Mass)</div><div style="font-family: var(--font-mono); font-size: 24px; font-weight: normal; line-height: 1.35; ">&nabla; &middot; u = 0</div></div><div class="kpi-card kpi-card--green" style="margin: 0; align-items: center; text-align: center; justify-content: center;  "><div class="kpi-card__title">Mixture Properties (Linear blend of &alpha;)</div><div style="font-family: var(--font-mono); font-size: 18px; font-weight: normal; line-height: 1.35; ">&rho; = &alpha;&middot;&rho;<sub>water</sub> + (1&minus;&alpha;)&middot;&rho;<sub>air</sub><br>&mu; = &alpha;&middot;&mu;<sub>water</sub> + (1&minus;&alpha;)&middot;&mu;<sub>air</sub></div></div></div><p><strong>VOF method:</strong> a fixed grid spans both fluids. &alpha; = water volume / cell volume: &alpha; = 1 water, &alpha; = 0 air, 0 &lt; &alpha; &lt; 1 interface cell. &rho; and &mu; are recomputed from &alpha; every step.</p>
     `
   },
   {
     title: "2. ASSUMPTIONS AND WALL CONDITIONS",
     content: `
-      <div class="kpi-card kpi-card--yellow" style="margin: 15px 0; align-items: flex-start;">
-        <div class="kpi-card__title">What Starts the Motion</div>
-        <div>In the dam break, gravity is the only thing that starts the motion. Nothing pushes the water; the column just collapses under its own weight.</div>
-      </div>
-      <div class="kpi-card kpi-card--blue" style="margin: 15px 0; align-items: flex-start;">
-        <div class="kpi-card__title">Continuum Assumption</div>
-        <div>Water and air are treated as smooth, continuous fluids, not as individual molecules. Every cell then has a density, velocity and pressure.</div>
-      </div>
-      <table class="table" style="margin: 20px 0; background: white; border: 2px solid var(--ink);">
-        <thead style="background: var(--yellow); color: var(--ink);">
-          <tr><th style="color: var(--ink);">Condition</th><th style="color: var(--ink);">Meaning</th></tr>
-        </thead>
-        <tbody>
-          <tr><td style="font-weight: bold;">No-penetration</td><td>Fluid cannot cross the wall. Always true for solid walls.</td></tr>
-          <tr><td style="font-weight: bold;">No-slip</td><td>Fluid touching the wall is stuck to it (zero speed there). Realistic for real walls.</td></tr>
-          <tr><td style="font-weight: bold;">Free-slip</td><td>Fluid slides along the wall with no friction. An idealisation.</td></tr>
-          <tr><td style="font-weight: bold;">Open boundary</td><td>Fluid and air can pass freely, like the open top of a tank.</td></tr>
-        </tbody>
-      </table>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 15px 0; "><div class="kpi-card kpi-card--yellow" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center;  "><div class="kpi-card__title">What Starts the Motion</div><div style="font-size: 17px;">In the dam break, gravity is the only thing that starts the motion. Nothing pushes the water; the column just collapses under its own weight.</div></div><div class="kpi-card kpi-card--green" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center;  "><div class="kpi-card__title">Continuum Assumption</div><div style="font-size: 17px;">Water and air are treated as smooth, continuous fluids, not as individual molecules. Every cell then has a density, velocity and pressure.</div></div></div><table class="table" style="margin: 20px 0; background: white; border: 2px solid var(--ink);"><thead style="background: var(--yellow); color: var(--ink);"><tr><th style="color: var(--ink);">Condition</th><th style="color: var(--ink);">Meaning</th></tr></thead><tbody><tr><td style="font-weight: bold;">No-penetration</td><td>Fluid cannot cross the wall. Always true for solid walls.</td></tr><tr><td style="font-weight: bold;">No-slip</td><td>Fluid touching the wall is stuck to it (zero speed there). Realistic for real walls.</td></tr><tr><td style="font-weight: bold;">Free-slip</td><td>Fluid slides along the wall with no friction. An idealisation.</td></tr><tr><td style="font-weight: bold;">Open boundary</td><td>Fluid and air can pass freely, like the open top of a tank.</td></tr></tbody></table>
     `
   },
   {
     title: "3. INTERFACE TRANSPORT",
     content: `
-      <p><strong>&alpha; Transport: No diffusion, no source</strong></p>
-      <div class="kpi-card kpi-card--blue" style="margin: 15px 0; align-items: center;">
-        <div class="kpi-card__title">Volume Fraction Advection</div>
-        <div style="font-family: var(--font-mono); font-size: 24px;">&part;&alpha;/&part;t + u &middot; &nabla;&alpha; = 0</div>
-      </div>
-      <p>Equivalent to &part;&alpha;/&part;t + &nabla; &middot; (&alpha;u) = 0 because &nabla; &middot; u = 0 (conservative form).</p>
-      <table class="table" style="margin: 20px 0; background: white; border: 2px solid var(--ink);">
-        <thead style="background: var(--yellow); color: var(--ink);">
-          <tr><th style="color: var(--ink);">Scheme</th><th style="color: var(--ink);">What it does</th><th style="color: var(--ink);">Trade-off</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Plain upwind</td><td>&alpha; treated like any other scalar</td><td>Easy, but interface smears</td></tr>
-          <tr><td style="font-weight: bold; color: var(--blue);">Donor-acceptor (USED)</td><td style="font-weight: bold; color: var(--blue);">Blends upwind/downwind by interface orientation and donor fullness</td><td style="font-weight: bold; color: var(--blue);">Sharp without geometry; needs CFL &lt; 1</td></tr>
-          <tr><td>PLIC</td><td>Straight-line interface per cell, exact geometric fluxes</td><td>Sharpest; many edge cases</td></tr>
-          <tr><td>Van Leer</td><td>Flux limiter for momentum, not for &alpha;</td><td>High order when smooth, bounded at jumps</td></tr>
-        </tbody>
-      </table>
+      <div class="kpi-card kpi-card--green" style="margin: 15px 0; align-items: center; text-align: center; justify-content: center;  "><div class="kpi-card__title">&alpha; Transport: No diffusion, no source</div><div style="font-family: var(--font-mono); font-size: 26px; font-weight: normal; line-height: 1.35; ">&part;&alpha;/&part;t + u &middot; &nabla;&alpha; = 0</div><div style="font-family: var(--font-mono); font-size: 15px; font-weight: normal; line-height: 1.35; ">equivalent to &part;&alpha;/&part;t + &nabla; &middot; (&alpha;u) = 0 because &nabla; &middot; u = 0 (conservative form)</div></div><table class="table" style="margin: 20px 0; background: white; border: 2px solid var(--ink);"><thead style="background: var(--yellow); color: var(--ink);"><tr><th style="color: var(--ink);">Scheme</th><th style="color: var(--ink);">What it does</th><th style="color: var(--ink);">Trade-off</th></tr></thead><tbody><tr><td style="font-weight: bold;">Plain upwind</td><td>&alpha; treated like any other scalar</td><td>Easy, but interface smears</td></tr><tr><td style="font-weight: bold; color: var(--blue);">Donor-acceptor (USED)</td><td>Blends upwind/downwind by interface orientation and donor fullness</td><td>Sharp without geometry; needs CFL &lt; 1</td></tr><tr><td style="font-weight: bold;">PLIC</td><td>Straight-line interface per cell, exact geometric fluxes</td><td>Sharpest; many edge cases</td></tr><tr><td style="font-weight: bold;">Van Leer</td><td>Flux limiter for momentum, not for &alpha;</td><td>High order when smooth, bounded at jumps</td></tr></tbody></table>
     `
   },
   {
     title: "4. TIME STEP: CHORIN PROJECTION",
     content: `
-      <p><strong>1. Predictor (No Pressure):</strong></p>
-      <p style="font-family: var(--font-mono); font-size: 18px; margin-left: 20px;">u* = u + &Delta;t &middot; [ &minus;(u &middot; &nabla;)u + (1/&rho;)&nabla; &middot; (&mu;&nabla;u) + g ]</p>
-      <div class="kpi-card kpi-card--green" style="margin: 15px 0; align-items: center;">
-        <div class="kpi-card__title">2. Pressure Poisson</div>
-        <div style="font-family: var(--font-mono); font-size: 24px;">&nabla; &middot; ((1/&rho;)&nabla;p) = (1/&Delta;t) &nabla; &middot; u*</div>
-      </div>
-      <p><strong>3. Projection:</strong> u(n+1) = u* &minus; (&Delta;t/&rho;)&nabla;p so that &nabla; &middot; u(n+1) = 0</p>
-      <p><strong>4.</strong> Advect &alpha; with the corrected velocity (donor-acceptor), then clip &alpha; to [0, 1].</p>
-      <p><strong>5.</strong> Recompute &rho; and &mu; from &alpha;; repeat with a CFL-limited &Delta;t.</p>
-      <p><em>Why split?</em> u* is where the water wants to go from gravity, momentum and viscosity alone. The Poisson solve finds the pressure that removes the divergence of u*; the projection applies it.</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin: 15px 0; "><div class="kpi-card kpi-card--blue" style="margin: 0; align-items: center; text-align: center; justify-content: center;  min-height: 150px;"><div class="kpi-card__title">1. Predictor (No Pressure)</div><div style="font-family: var(--font-mono); font-size: 17px; font-weight: normal; line-height: 1.35; ">u* = u + &Delta;t &middot; [ &minus;(u &middot; &nabla;)u<br>+ (1/&rho;)&nabla; &middot; (&mu;&nabla;u) + g ]</div></div><div class="kpi-card kpi-card--green" style="margin: 0; align-items: center; text-align: center; justify-content: center;  min-height: 150px;"><div class="kpi-card__title">2. Pressure Poisson</div><div style="font-family: var(--font-mono); font-size: 20px; font-weight: normal; line-height: 1.35; ">&nabla; &middot; ((1/&rho;)&nabla;p)<br>= (1/&Delta;t) &nabla; &middot; u*</div></div><div class="kpi-card kpi-card--yellow" style="margin: 0; align-items: center; text-align: center; justify-content: center;  min-height: 150px;"><div class="kpi-card__title">3. Projection</div><div style="font-family: var(--font-mono); font-size: 17px; font-weight: normal; line-height: 1.35; ">u(n+1) = u* &minus; (&Delta;t/&rho;)&nabla;p<br>so that &nabla; &middot; u(n+1) = 0</div></div></div><p><strong>4.</strong> Advect &alpha; with the corrected velocity (donor-acceptor), then clip &alpha; to [0, 1].</p><p><strong>5.</strong> Recompute &rho; and &mu; from &alpha;; repeat with a CFL-limited &Delta;t.</p><p><strong>Why split?</strong> u* is where the water wants to go from gravity, momentum and viscosity alone. The Poisson solve finds the pressure that removes the divergence of u*; the projection applies it.</p>
     `
   },
   {
     title: "5. DENSITY RATIO AND PRESSURE SOLVE",
     content: `
-      <table class="table" style="margin: 20px 0; background: white; border: 2px solid var(--ink);">
-        <thead style="background: var(--yellow); color: var(--ink);">
-          <tr><th style="color: var(--ink);">Fluid</th><th style="color: var(--ink);">Density (&rho;)</th><th style="color: var(--ink);">Kinematic Viscosity (&nu;)</th><th style="color: var(--ink);">Ratio</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Water</td><td>998.0 kg/m&sup3;</td><td>1.00e-6 m&sup2;/s</td><td rowspan="2" style="vertical-align: middle; font-weight: bold; color: var(--blue);">~832&times; (&rho;)</td></tr>
-          <tr><td>Air</td><td>1.20 kg/m&sup3;</td><td>1.48e-5 m&sup2;/s</td></tr>
-        </tbody>
-      </table>
-      <p><strong>Why it is ill-conditioned:</strong> The coefficient 1/&rho; jumps ~832&times; across a single interface cell, so the Poisson matrix entries span about three orders of magnitude and plain CG converges slowly.</p>
-      <p><strong>FIX: IC(0)-PRECONDITIONED CG</strong></p>
-      <p>2450 &rarr; 112 iterations<br>18.5 &rarr; 2.1 ms per step; scaling O(N^1.5) &rarr; O(N^1.2)</p>
-      <p><strong>Matrix assembly:</strong> the 5-point Laplacian must treat fluid and empty cells carefully to stay symmetric positive definite.</p>
+      <table class="table" style="margin: 15px 0; background: white; border: 2px solid var(--ink);"><thead style="background: var(--yellow); color: var(--ink);"><tr><th style="color: var(--ink);">Fluid</th><th style="color: var(--ink);">Density (&rho;)</th><th style="color: var(--ink);">Kinematic Viscosity (&nu;)</th><th style="color: var(--ink);">Ratio</th></tr></thead><tbody><tr><td style="font-weight: bold;">Water</td><td>998.0 kg/m&sup3;</td><td>1.00e-6 m&sup2;/s</td><td rowspan="2" style="vertical-align: middle; text-align: center; font-weight: bold; color: var(--blue);">~832&times; (&rho;)</td></tr><tr><td style="font-weight: bold;">Air</td><td>1.20 kg/m&sup3;</td><td>1.48e-5 m&sup2;/s</td></tr></tbody></table><div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 25px 0 15px 0; "><div class="kpi-card kpi-card--yellow" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center;  min-height: 130px;"><div class="kpi-card__title">Why it is ill-conditioned</div><div style="font-size: 16px;">The coefficient 1/&rho; jumps ~832&times; across a single interface cell, so the Poisson matrix entries span about three orders of magnitude and plain CG converges slowly.</div></div><div class="kpi-card kpi-card--green" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center;  min-height: 130px;"><div class="kpi-card__title">Fix: IC(0)-preconditioned CG</div><div style="font-family: var(--font-mono); font-size: 22px; font-weight: bold; line-height: 1.35; ">2450 &rarr; 112 iterations</div><div style="font-family: var(--font-mono); font-size: 15px; font-weight: normal; line-height: 1.35; ">18.5 &rarr; 2.1 ms per step; scaling O(N^1.5) &rarr; O(N^1.2)</div></div></div><p><strong>Matrix assembly:</strong> the 5-point Laplacian must treat fluid and empty cells carefully to stay symmetric positive definite.</p>
     `
   },
   {
     title: "6. DAM-BREAK THEORY: RITTER",
     content: `
-      <p><strong>Shallow Water (Saint-Venant):</strong> h<sub>t</sub> + (h &middot; u)<sub>x</sub> = 0, u<sub>t</sub> + u &middot; u<sub>x</sub> + g &middot; h<sub>x</sub> = 0</p>
-      <p><strong>Water at rest (h = H)</strong></p>
-      <div class="kpi-card kpi-card--yellow" style="margin: 15px 0; align-items: center;">
-        <div class="kpi-card__title">Ritter Solution, c<sub>0</sub> = &radic;(gH)</div>
-        <div style="font-family: var(--font-mono); font-size: 24px;">u = (2/3)(c<sub>0</sub> + x/t)<br>h = (2c<sub>0</sub> &minus; x/t)&sup2; / (9g)</div>
-      </div>
-      <p><em>for &minus;c<sub>0</sub>t &le; x &le; 2c<sub>0</sub>t</em></p>
-      <div style="display: flex; justify-content: space-between; border-top: 4px solid var(--ink); padding-top: 6px; margin: 10px 0 15px 0; font-family: var(--font-mono); font-size: 16px;">
-        <span>&minus;c<sub>0</sub>&middot;t</span>
-        <span>gate x=0</span>
-        <span>2c<sub>0</sub>&middot;t</span>
-      </div>
-      <p><strong>What it predicts (valid for T &lt; L<sub>0</sub>/c<sub>0</sub>, before reflection off the back wall):</strong><br>
-      Front speed 2&radic;(gH) with zero depth. At the gate: h = 4H/9, u = c (Fr = 1), constant discharge q = (8/27)&radic;g &middot; H<sup>1.5</sup>.</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin: 15px 0 20px 0; "><div style="background: #fff; border: 3px solid var(--ink); box-shadow: 6px 6px 0 var(--ink); padding: 4px;"><svg viewBox="0 0 521.2 269.7" style="width: 100%; height: auto; display: block;" xmlns="http://www.w3.org/2000/svg" font-family="Courier New, monospace"><text x="18.3" y="25" font-size="10.5" font-weight="bold">WATER AT REST (h = H)</text><polygon points="18.3,214.8 18.3,41.1 139.5,41.1 154.6,55.3 169.7,68.8 184.9,81.8 200.0,94.2 215.2,105.9 230.3,117.1 245.5,127.6 260.6,137.6 275.7,146.9 290.9,155.7 306.0,163.8 321.2,171.4 336.3,178.3 351.5,184.6 366.6,190.4 381.8,195.5 396.9,200.0 412.0,203.9 427.2,207.3 442.3,210.0 457.5,212.1 472.6,213.6 487.8,214.5 502.9,214.8" fill="#2E4BFF" stroke="#000000" stroke-width="2.9" stroke-linejoin="round"/><line x1="260.6" y1="32" x2="260.6" y2="233" stroke="#000000" stroke-width="2.2" stroke-dasharray="9 6"/><text x="139" y="253" font-size="10.5" font-weight="bold" text-anchor="middle">&minus;c0&middot;t</text><text x="260.6" y="253" font-size="10.5" font-weight="bold" text-anchor="middle">gate x=0</text><text x="502" y="253" font-size="10.5" font-weight="bold" text-anchor="end">2c0&middot;t</text></svg></div><div style="display: flex; flex-direction: column; gap: 20px;"><div class="kpi-card kpi-card--blue" style="margin: 0; align-items: center; text-align: center; justify-content: center;  "><div class="kpi-card__title">Shallow Water (Saint-Venant)</div><div style="font-family: var(--font-mono); font-size: 19px; font-weight: normal; line-height: 1.35; ">h<sub>t</sub> + (h &middot; u)<sub>x</sub> = 0<br>u<sub>t</sub> + u &middot; u<sub>x</sub> + g &middot; h<sub>x</sub> = 0</div></div><div class="kpi-card kpi-card--yellow" style="margin: 0; align-items: center; text-align: center; justify-content: center;  "><div class="kpi-card__title">Ritter Solution, c<sub>0</sub> = &radic;(gH)</div><div style="font-family: var(--font-mono); font-size: 19px; font-weight: normal; line-height: 1.35; ">u = (2/3)(c<sub>0</sub> + x/t)<br>h = (2&middot;c<sub>0</sub> &minus; x/t)&sup2; / (9g)</div><div style="font-family: var(--font-mono); font-size: 14px; font-weight: normal; line-height: 1.35; ">for &minus;c<sub>0</sub>&middot;t &le; x &le; 2&middot;c<sub>0</sub>&middot;t</div></div></div></div><div class="kpi-card kpi-card--green" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center;  "><div class="kpi-card__title">What it predicts (valid for T &lt; L<sub>0</sub>/c<sub>0</sub>, before reflection off the back wall)</div><div style="font-size: 17px;">Front speed 2&radic;(gH) with zero depth. At the gate: h = 4H/9, u = c (Fr = 1), constant discharge q = (8/27)&middot;&radic;g&middot;H<sup>1.5</sup>.</div></div>
     `
   },
   {
     title: "7. REALITY CHECK: FRICTION AND SCALING",
     content: `
-      <p><strong>Friction (Dressler, Whitham):</strong> Blunt front, vertical tangent, finite depth. Slower than 2&radic;(gH).</p>
-      <p><strong>Average Front Speed v/&radic;(gH), t* &gt; 1</strong></p>
-      <div style="margin: 10px 0 15px 0; padding: 10px; background: white; border: 2px solid var(--ink);">
-        <div style="display: flex; align-items: center; margin: 4px 0;"><div style="width: 140px; font-size: 14px; font-weight: bold;">Ritter</div><div style="flex: 1; background: white; border: 2px solid var(--ink); height: 20px;"><div style="width: 100.0%; height: 100%; background: var(--blue);"></div></div><div style="width: 50px; text-align: right; font-family: var(--font-mono);">2.0</div></div>
-        <div style="display: flex; align-items: center; margin: 4px 0;"><div style="width: 140px; font-size: 14px; font-weight: bold;">Lobovsk&yacute; 300</div><div style="flex: 1; background: white; border: 2px solid var(--ink); height: 20px;"><div style="width: 78.0%; height: 100%; background: var(--yellow);"></div></div><div style="width: 50px; text-align: right; font-family: var(--font-mono);">1.56</div></div>
-        <div style="display: flex; align-items: center; margin: 4px 0;"><div style="width: 140px; font-size: 14px; font-weight: bold;">Lobovsk&yacute; 600</div><div style="flex: 1; background: white; border: 2px solid var(--ink); height: 20px;"><div style="width: 67.0%; height: 100%; background: var(--yellow);"></div></div><div style="width: 50px; text-align: right; font-family: var(--font-mono);">1.34</div></div>
-        <div style="display: flex; align-items: center; margin: 4px 0;"><div style="width: 140px; font-size: 14px; font-weight: bold;">M&amp;M 57</div><div style="flex: 1; background: white; border: 2px solid var(--ink); height: 20px;"><div style="width: 74.0%; height: 100%; background: var(--yellow);"></div></div><div style="width: 50px; text-align: right; font-family: var(--font-mono);">1.48</div></div>
-        <div style="display: flex; align-items: center; margin: 4px 0;"><div style="width: 140px; font-size: 14px; font-weight: bold;">M&amp;M 114</div><div style="flex: 1; background: white; border: 2px solid var(--ink); height: 20px;"><div style="width: 84.5%; height: 100%; background: var(--yellow);"></div></div><div style="width: 50px; text-align: right; font-family: var(--font-mono);">1.69</div></div>
-        <div style="display: flex; align-items: center; margin: 4px 0;"><div style="width: 140px; font-size: 14px; font-weight: bold;">Dressler 110</div><div style="flex: 1; background: white; border: 2px solid var(--ink); height: 20px;"><div style="width: 85.0%; height: 100%; background: var(--yellow);"></div></div><div style="width: 50px; text-align: right; font-family: var(--font-mono);">1.7</div></div>
-        <div style="display: flex; align-items: center; margin: 4px 0;"><div style="width: 140px; font-size: 14px; font-weight: bold;">Hu</div><div style="flex: 1; background: white; border: 2px solid var(--ink); height: 20px;"><div style="width: 60.5%; height: 100%; background: var(--yellow);"></div></div><div style="width: 50px; text-align: right; font-family: var(--font-mono);">1.21</div></div>
-        <div style="display: flex; align-items: center; margin: 4px 0;"><div style="width: 140px; font-size: 14px; font-weight: bold;">Koshizuka</div><div style="flex: 1; background: white; border: 2px solid var(--ink); height: 20px;"><div style="width: 65.0%; height: 100%; background: var(--yellow);"></div></div><div style="width: 50px; text-align: right; font-family: var(--font-mono);">1.3</div></div>
-      </div>
-      <p><strong>Lab Scale, H = 300 mm:</strong> Re = 3.8e6, We = 1.64e5, Fr = 1. Large We: surface tension negligible.</p>
-      <p><strong>Early Times, T* &lt; 1:</strong> Not hydrostatic; gate removal (3.5&ndash;4.5 m/s) matters.</p>
-      <p style="font-size: 13px;"><em>Source: Lobovsk&yacute; et al., Table 1. M&amp;M = Martin &amp; Moyce; numbers after names are H in mm.</em></p>
+      <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; margin: 15px 0 10px 0; "><div style="background: #fff; border: 3px solid var(--ink); padding: 10px 14px;"><div style="font-family: var(--font-mono); font-size: 12px; font-weight: bold; margin-bottom: 6px;">AVERAGE FRONT SPEED v/&radic;(gH), t* &gt; 1</div><svg viewBox="0 0 600 290" style="width: 100%; height: auto; display: block;" xmlns="http://www.w3.org/2000/svg" font-family="Courier New, monospace" font-size="11"><line x1="46" y1="236.0" x2="592" y2="236.0" stroke="#888888" stroke-width="1"/><text x="38" y="240.0" text-anchor="end">0</text><line x1="46" y1="191.8" x2="592" y2="191.8" stroke="#D9D9D9" stroke-width="1"/><text x="38" y="195.8" text-anchor="end">0.5</text><line x1="46" y1="147.7" x2="592" y2="147.7" stroke="#D9D9D9" stroke-width="1"/><text x="38" y="151.7" text-anchor="end">1</text><line x1="46" y1="103.5" x2="592" y2="103.5" stroke="#D9D9D9" stroke-width="1"/><text x="38" y="107.5" text-anchor="end">1.5</text><line x1="46" y1="59.3" x2="592" y2="59.3" stroke="#D9D9D9" stroke-width="1"/><text x="38" y="63.3" text-anchor="end">2</text><line x1="46" y1="24" x2="46" y2="236" stroke="#888888" stroke-width="1"/><rect x="55.8" y="59.3" width="48.8" height="176.7" fill="#FF3366"/><text x="80.1" y="53.3" text-anchor="middle">2.00</text><text x="80.1" y="252" text-anchor="middle">Ritter</text><rect x="124.0" y="98.2" width="48.8" height="137.8" fill="#2E4BFF"/><text x="148.4" y="92.2" text-anchor="middle">1.56</text><text x="148.4" y="252" text-anchor="middle">Lobovsk&yacute;</text><text x="148.4" y="265" text-anchor="middle">300</text><rect x="192.2" y="117.6" width="48.8" height="118.4" fill="#2E4BFF"/><text x="216.6" y="111.6" text-anchor="middle">1.34</text><text x="216.6" y="252" text-anchor="middle">Lobovsk&yacute;</text><text x="216.6" y="265" text-anchor="middle">600</text><rect x="260.5" y="105.3" width="48.8" height="130.7" fill="#2E4BFF"/><text x="284.9" y="99.3" text-anchor="middle">1.48</text><text x="284.9" y="252" text-anchor="middle">M&amp;M 57</text><rect x="328.8" y="86.7" width="48.8" height="149.3" fill="#2E4BFF"/><text x="353.1" y="80.7" text-anchor="middle">1.69</text><text x="353.1" y="252" text-anchor="middle">M&amp;M 114</text><rect x="397.0" y="85.8" width="48.8" height="150.2" fill="#2E4BFF"/><text x="421.4" y="79.8" text-anchor="middle">1.70</text><text x="421.4" y="252" text-anchor="middle">Dressler</text><text x="421.4" y="265" text-anchor="middle">110</text><rect x="465.2" y="129.1" width="48.8" height="106.9" fill="#2E4BFF"/><text x="489.6" y="123.1" text-anchor="middle">1.21</text><text x="489.6" y="252" text-anchor="middle">Hu</text><rect x="533.5" y="121.2" width="48.8" height="114.8" fill="#2E4BFF"/><text x="557.9" y="115.2" text-anchor="middle">1.30</text><text x="557.9" y="252" text-anchor="middle">Koshizuka</text></svg></div><div style="display: flex; flex-direction: column; gap: 18px;"><div class="kpi-card kpi-card--yellow" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center;  "><div class="kpi-card__title">Friction (Dressler, Whitham)</div><div style="font-size: 17px;">Blunt front, vertical tangent, finite depth. Slower than 2&radic;(gH).</div></div><div class="kpi-card kpi-card--blue" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center;  "><div class="kpi-card__title">Lab Scale, H = 300 mm</div><div style="font-size: 17px;">Re = 3.8e6, We = 1.64e5, Fr = 1<br>Large We: surface tension negligible</div></div><div class="kpi-card kpi-card--green" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center;  "><div class="kpi-card__title">Early Times, T* &lt; 1</div><div style="font-size: 17px;">Not hydrostatic; gate removal (3.5&ndash;4.5 m/s) matters.</div></div></div></div><p style="font-size: 13px; margin: 6px 0 0 0;">Source: Lobovsk&yacute; et al., Table 1. M&amp;M = Martin &amp; Moyce; numbers after names are H in mm.</p>
     `
   },
   {
     title: "8. VALIDATION",
     content: `
-      <table class="table" style="margin: 15px 0; background: white; border: 2px solid var(--ink);">
-        <thead style="background: var(--yellow); color: var(--ink);">
-          <tr><th style="color: var(--ink);">Source</th><th style="color: var(--ink);">Length</th><th style="color: var(--ink);">Time</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Martin &amp; Moyce</td><td>initial width a</td><td>T = t&radic;(g/a)</td></tr>
-          <tr><td>Lobovsk&yacute;</td><td>depth H</td><td>t* = t&radic;(g/H)</td></tr>
-          <tr><td style="font-weight: bold; color: var(--blue);">This solver</td><td style="font-weight: bold; color: var(--blue);">L<sub>0</sub></td><td style="font-weight: bold; color: var(--blue);">T* = t&radic;(g/L<sub>0</sub>)</td></tr>
-        </tbody>
-      </table>
-      <p><strong>Early-Time Check (Ritter):</strong> X* = 1 + 2T*. Front starts at x/L<sub>0</sub> = 1, then moves at 2&radic;(gH); square column.</p>
-      <p>Match the axis convention of the data you overlay before comparing curves.</p>
-      <div style="border: 2px solid var(--ink); padding: 10px; background: white; margin: 15px 0;">
-        <canvas id="deckValChart" width="800" height="250" style="width: 100%; height: 250px;"></canvas>
-      </div>
-      <p><strong>Acceptance Checks:</strong></p>
-      <ul>
-        <li>&int;&alpha; dV stays within a stated tolerance (live readout)</li>
-        <li>Front X*(T*) vs Martin &amp; Moyce data</li>
-        <li>Front stays below Ritter: 1 + 2T*</li>
-        <li>Late front speed about 1.1&ndash;1.75 &radic;(gH)</li>
-        <li>&nabla; &middot; u &approx; 0 after every projection</li>
-        <li>Error shrinks under grid and &Delta;t refinement</li>
-      </ul>
+      <div style="display: grid; grid-template-columns: 1.28fr 1fr; gap: 18px; margin: 15px 0; "><div><table class="table" style="margin: 0 0 18px 0; background: white; border: 2px solid var(--ink);"><thead style="background: var(--yellow); color: var(--ink);"><tr><th style="color: var(--ink);">Source</th><th style="color: var(--ink);">Length</th><th style="color: var(--ink);">Time</th></tr></thead><tbody><tr><td style="font-weight: bold;">Martin &amp; Moyce</td><td>initial width a</td><td>T = t&radic;(g/a)</td></tr><tr><td style="font-weight: bold;">Lobovsk&yacute;</td><td>depth H</td><td>t* = t&radic;(g/H)</td></tr><tr><td style="font-weight: bold; color: var(--blue);">This solver</td><td>L<sub>0</sub></td><td>T* = t&radic;(g/L<sub>0</sub>)</td></tr></tbody></table><div class="kpi-card kpi-card--blue" style="margin: 0; align-items: center; text-align: center; justify-content: center;  min-height: 120px;"><div class="kpi-card__title">Early-Time Check (Ritter)</div><div style="font-family: var(--font-mono); font-size: 26px; font-weight: bold; line-height: 1.35; ">X* = 1 + 2&middot;T*</div><div style="font-family: var(--font-mono); font-size: 14px; font-weight: normal; line-height: 1.35; ">front starts at x/L<sub>0</sub> = 1, then moves at 2&radic;(gH); square column</div></div><p style="margin: 14px 0 0 0;">Match the axis convention of the data you overlay before comparing curves.</p></div><div class="kpi-card kpi-card--yellow" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center;  justify-content: flex-start;"><div class="kpi-card__title"></div><div style="font-family: var(--font-mono); font-size: 24px; font-weight: bold; text-transform: uppercase; margin-bottom: 14px;">Acceptance Checks</div><ul style="margin: 0; padding-left: 20px; font-size: 16px; line-height: 1.5;"><li>&int;&alpha; dV stays within a stated tolerance (live readout)</li><li>Front X*(T*) vs Martin &amp; Moyce data</li><li>Front stays below Ritter: 1 + 2T*</li><li>Late front speed about 1.1&ndash;1.75 &radic;(gH)</li><li>&nabla; &middot; u &approx; 0 after every projection</li><li>Error shrinks under grid and &Delta;t refinement</li></ul></div></div><canvas id="deckValChart" width="800" height="250" style="display: none;"></canvas>
     `
   },
   {
     title: "9. IMPACT PRESSURE AT A WALL",
     content: `
-      <div class="kpi-card kpi-card--green" style="margin: 15px 0; align-items: center;">
-        <div class="kpi-card__title">Median Peak, 3 mm above bed</div>
-        <div style="font-family: var(--font-mono); font-size: 24px;">&approx; 3 &times; &rho;gH</div>
-      </div>
-      <p><strong>97.5th percentile &approx; 4.5&times;.</strong></p>
-      <p><strong>P / &rho;V&sup2;, measured:</strong> 1.25 (vs 0.5 for a steady impinging jet).</p>
-      <p><strong>Repeated runs per fill height: 100.</strong> Peak pressure is a random variable.</p>
-      <p><strong>Time scales:</strong> rise 1.5&ndash;4.5 ms, decay about 10&times; longer. Impulse &int;P dt &approx; &frac12; &times; peak &times; impact time (within about 25%).</p>
-      <p><strong>Scaling:</strong> lowest-sensor peak &prop; H (Froude: P ~ &rho;gH); higher sensors are not linear in H.</p>
-      <p><em>For your solver:</em> incompressible VOF gives a sharp, grid-dependent spike. Compare arrival time and impulse with the median and 95% band, not one peak.</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin: 15px 0; "><div class="kpi-card kpi-card--blue" style="margin: 0; align-items: center; text-align: center; justify-content: center;  min-height: 150px;"><div class="kpi-card__title">Median Peak, 3 mm above bed</div><div style="font-family: var(--font-mono); font-size: 30px; font-weight: bold; line-height: 1.35; ">&approx; 3 &times; &rho;gH</div><div style="font-family: var(--font-mono); font-size: 15px; font-weight: normal; line-height: 1.35; ">97.5th percentile &approx; 4.5&times;</div></div><div class="kpi-card kpi-card--yellow" style="margin: 0; align-items: center; text-align: center; justify-content: center;  min-height: 150px;"><div class="kpi-card__title">P / &rho;V&sup2;, measured</div><div style="font-family: var(--font-mono); font-size: 36px; font-weight: bold; line-height: 1.35; ">1.25</div><div style="font-family: var(--font-mono); font-size: 15px; font-weight: normal; line-height: 1.35; ">vs 0.5 for a steady impinging jet</div></div><div class="kpi-card kpi-card--green" style="margin: 0; align-items: center; text-align: center; justify-content: center;  min-height: 150px;"><div class="kpi-card__title">Repeated runs per fill height</div><div style="font-family: var(--font-mono); font-size: 36px; font-weight: bold; line-height: 1.35; ">100</div><div style="font-family: var(--font-mono); font-size: 15px; font-weight: normal; line-height: 1.35; ">peak pressure is a random variable</div></div></div><p><strong>Time scales:</strong> rise 1.5&ndash;4.5 ms, decay about 10&times; longer. Impulse &int;P dt &approx; &frac12; &times; peak &times; impact time (within about 25%).</p><p><strong>Scaling:</strong> lowest-sensor peak &prop; H (Froude: P ~ &rho;gH); higher sensors are not linear in H.</p><p><strong>For your solver:</strong> incompressible VOF gives a sharp, grid-dependent spike. Compare arrival time and impulse with the median and 95% band, not one peak.</p>
     `
   },
   {
     title: "10. SCOPE FOR IMPROVEMENT",
     content: `
-      <p><strong>Higher-Order Interface Tracking:</strong> Replace donor-acceptor with PLIC for a continuous, sharp geometric interface reconstruction.</p>
-      <p><strong>Hardware Acceleration:</strong> Port grid sweeps and the Poisson solver to WebGPU compute shaders; scale to millions of cells and 3D.</p>
-      <p><strong>Physics Gaps:</strong> Air compressibility and entrapment at impact, wet-bed jets, and turbulence at Re ~ 1e6 on an under-resolved grid.</p>
-      <p><strong>3D Effects:</strong> The lab flow stops being 2D at H = 600 mm, which a 2D solver cannot show.</p>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 15px 0; "><div class="kpi-card kpi-card--yellow" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center;  min-height: 150px;"><div class="kpi-card__title">Higher-Order Interface Tracking</div><div style="font-size: 17px;">Replace donor-acceptor with PLIC for a continuous, sharp geometric interface reconstruction.</div></div><div class="kpi-card kpi-card--green" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center;  min-height: 150px;"><div class="kpi-card__title">Hardware Acceleration</div><div style="font-size: 17px;">Port grid sweeps and the Poisson solver to WebGPU compute shaders; scale to millions of cells and 3D.</div></div><div class="kpi-card kpi-card--blue" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center;  min-height: 150px;"><div class="kpi-card__title">Physics Gaps</div><div style="font-size: 17px;">Air compressibility and entrapment at impact, wet-bed jets, and turbulence at Re ~ 1e6 on an under-resolved grid.</div></div><div class="kpi-card" style="margin: 0; align-items: flex-start; text-align: left; justify-content: center; background: #fff; color: var(--ink); min-height: 150px;"><div class="kpi-card__title">3D Effects</div><div style="font-size: 17px;">The lab flow stops being 2D at H = 600 mm, which a 2D solver cannot show.</div></div></div>
     `
   }
 ];
