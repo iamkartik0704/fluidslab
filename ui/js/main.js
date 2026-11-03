@@ -302,8 +302,8 @@ function renderField() {
   $("dDT").textContent = f.diags[DIAG.DT].toExponential(2);
   $("dCFL").textContent = f.diags[DIAG.CFL].toFixed(3);
   $("dDrift").textContent = f.diags[DIAG.DRIFT].toFixed(4) + " %";
-  $("dMaxDiv").textContent = f.diags[DIAG.MAXDIV].toExponential(2);
-  $("dPois").textContent = String(Math.round(f.diags[DIAG.POIS]));
+  $("dMaxDiv") && ($("dMaxDiv").textContent = f.diags[DIAG.MAXDIV].toExponential(2));
+  $("dPois") && ($("dPois").textContent = String(Math.round(f.diags[DIAG.POIS])));
 
   const xs = f.diags[DIAG.FRONTXS];
   $("frontWarn").classList.toggle("hidden", !(xs > 0 && xs < 1));
